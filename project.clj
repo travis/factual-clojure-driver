@@ -1,5 +1,5 @@
-(defproject funnyplaces "1.2.1"
-  :url "http://github.com/dirtyvagabond/Funnyplaces"
+(defproject factual/clj-factual "1.3.1-SNAPSHOT"
+  :url "http://github.com/Factual/clj-factual"
   :description "A Clojure driver for Factual's public API"
   :dependencies [
     [com.google.api.client/google-api-client "1.4.1-beta"]

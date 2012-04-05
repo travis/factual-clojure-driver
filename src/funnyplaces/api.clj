@@ -1,4 +1,4 @@
-(ns funnyplaces.api
+(ns clj-factual.api
   (:refer-clojure :exclude [resolve])
   (:import (com.google.api.client.auth.oauth OAuthHmacSigner OAuthParameters))
   (:import (com.google.api.client.http.javanet NetHttpTransport))
@@ -110,35 +110,33 @@
        (catch HttpResponseException hre
          (throw+ (new-error hre gurl-map)))))
   ([path opts]
+     (println "PATH" path)
+     (println "OPTS" opts)
      (get-results (make-gurl-map path opts))))
 
 (defn fetch
   "Runs a fetch request against Factual and returns the results.
-   table should be a valid table name, such as :global. The query
-   is specified with the rest of the args. Examples:
+   q is a hash-map specifying the full query. The only required
+   entry is :table, which must be a valid Factual table name,
+   such as :global or :places.
 
-   (fetch :restaurants-us)
+   Optional query parameters, such as row filters and geolocation
+   queries, are specified with key value pairs.
 
-   (fetch :places :q \"cafe\")
+   Example usages:
 
-   (fetch :restaurants-us
-     :q \"cafe\"
-     :offset 20
-     :limit 10
-     :filters {:name {:$bw \"starbucks\" :locality {:$eq \"los angeles\"}}))"
-  [table & {:as opts}]
-  (get-results (str "t/" (name table)) opts))
+   (fetch {:table :global})
 
-(defn fetch-q
-  "Uses table and query to build the proper collection of
-   arguments to fun/fetch, then applies, thereby running the
-   specified query against Factual."
-  [table query]
-  (let [args (reduce (fn [col [k v]]
-                       (conj col k v))
-                     [table]
-                     query)]
-    (apply fetch args)))
+   (fetch {table :places :q \"cafe\"})
+
+   (fetch
+     {:table  :restaurants-us
+      :q \"cafe\"
+      :offset 20
+      :limit 10
+      :filters {:name {:$bw \"starbucks\" :locality {:$eq \"los angeles\"}}}}))"
+  [q]
+  (get-results (str "t/" (name (:table q))) (dissoc q :table)))
 
 (defn schema [table]
   (get-results (str "t/" (name table) "/schema") []))
