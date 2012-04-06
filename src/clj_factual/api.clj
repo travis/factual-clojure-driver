@@ -12,7 +12,7 @@
 
 (declare ^:dynamic *factual-config*)
 
-(defrecord funnyplaces-error [code message opts])
+(defrecord factual-error [code message opts])
 
 (def ^:dynamic *base-url* "http://api.v3.factual.com/")
 
@@ -86,7 +86,7 @@
                      {:response (dissoc (:response res) :data)}))))
 
 (defn new-error
-  "Given an HttpResponseException, returns a funnyplaces-error record representing
+  "Given an HttpResponseException, returns a factual-error record representing
    the error response, which includes things like status code, status message, as
    well as the original opts used to create the request."
   [hre gurl-map]
@@ -94,34 +94,39 @@
         code (. res statusCode)
         msg (. res statusMessage)
         opts (:opts gurl-map)]
-    (funnyplaces-error. code msg opts)))
+    (factual-error. code msg opts)))
 
 (defn get-results
   "Executes the specified query and returns the results.
    The returned results will have metadata associated with it,
    built from the results metadata returned by Factual.
 
-   In the case of a bad response code, throws a funnyplaces-error record
+   In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
   ([gurl-map]
      (try
        (do-meta (read-json (get-resp (:gurl gurl-map))))
+       (catch RuntimeException re
+         ;; would be nice if HttpResponseException was at the top
+         ;; level, however seems like it comes back nested at least
+         ;; some of the time
+         (if (= HttpResponseException (class (.getCause re)))
+           (throw+ (new-error (.getCause re) gurl-map))
+           (throw re)))
        (catch HttpResponseException hre
          (throw+ (new-error hre gurl-map)))))
   ([path opts]
-     (println "PATH" path)
-     (println "OPTS" opts)
      (get-results (make-gurl-map path opts))))
 
 (defn fetch
   "Runs a fetch request against Factual and returns the results.
    q is a hash-map specifying the full query. The only required
-   entry is :table, which must be a valid Factual table name,
-   such as :global or :places.
+   entry is :table, which must be associated with valid Factual
+   table name.
 
    Optional query parameters, such as row filters and geolocation
-   queries, are specified with key value pairs.
+   queries, are specified with further entries in q.
 
    Example usages:
 
