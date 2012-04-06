@@ -146,14 +146,6 @@
 (defn schema [table]
   (get-results (str "t/" (name table) "/schema") []))
 
-(defn get-factid [url & {:as opts}]
-  (let [opts (assoc opts :url url)]
-    (get-results "places/crossref" opts)))
-
-(defn get-urls [factid & {:as opts}]
-  (let [opts (assoc opts :factual_id factid)]
-    (get-results "places/crossref" opts)))
-
 (defn crosswalk [& {:as opts}]
   (map #(update-in % [:namespace] keyword)
        (get-results "places/crosswalk" opts)))
