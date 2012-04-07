@@ -215,11 +215,15 @@ clj-factual supports all available row filtering logic. Examples:
 
 # Facets Usage
 
+````clojure
 ;; Count Starbucks in the US by city and state
-(facts/facets {:table :global :select "locality,region" :filters {:country :US}})
+(facts/facets {:table :global :select "locality,region" :q "starbucks" :filters {:country :US}})
+````
 
+````clojure
 ;; Count businesses by category 5 km around a lat, lon:
 (facts/facets {:table :global :select "category" :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})
+````
 
 # Crosswalk Usage
 

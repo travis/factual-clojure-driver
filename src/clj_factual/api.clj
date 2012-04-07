@@ -119,7 +119,6 @@
   ([path opts]
      (get-results (make-gurl-map path opts))))
 
-;;TODO! add  [table q] variation
 (defn fetch
   "Runs a fetch request against Factual and returns the results.
    q is a hash-map specifying the full query. The only required
