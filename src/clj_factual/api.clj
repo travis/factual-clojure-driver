@@ -119,6 +119,7 @@
   ([path opts]
      (get-results (make-gurl-map path opts))))
 
+;;TODO! add  [table q] variation
 (defn fetch
   "Runs a fetch request against Factual and returns the results.
    q is a hash-map specifying the full query. The only required
@@ -141,7 +142,30 @@
       :limit 10
       :filters {:name {:$bw \"starbucks\" :locality {:$eq \"los angeles\"}}}}))"
   [q]
+  {:pre [(:table q)]}
   (get-results (str "t/" (name (:table q))) (dissoc q :table)))
+
+(defn facets
+  "Runs a Facets request against Factual and returns the results.
+
+   q is a hash-map specifying the full query. The required entries
+   are:
+
+     :table  the name of a valid Factual table, e.g. :places
+     :select the field(s) to Facet. comma-delimted string, e.g. \"locality,region\"
+
+   Optional query parameters, such as row filters and geolocation
+   queries, are specified with further entries in q.
+
+   Facets give you row counts for Factual tables, grouped by facets of the data.
+   For example, you may want to query all businesses within 1 mile of a location
+   and for a count of those businesses by category:
+
+   (facets {:table :global :select \"category\"
+            :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})"
+  [q]
+  {:pre [(:table q)(:select q)]}
+  (get-results (str "t/" (name (:table q)) "/facets") (dissoc q :table)))
 
 (defn schema [table]
   (get-results (str "t/" (name table) "/schema") []))
