@@ -6,15 +6,18 @@
   (:use [clojure.java.io :only (reader)])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (com.google.api.client.http GenericUrl HttpResponseException HttpHeaders)))
-  
 
-(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.2")
+;; TODO: Factor out oauth/request solution into its own lib?
+
+(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.3.1")
 
 (declare ^:dynamic *factual-config*)
 
 (defrecord factual-error [code message opts])
 
 (def ^:dynamic *base-url* "http://api.v3.factual.com/")
+
+(def ^:dynamic *debug* false)
 
 (defn factual!
   [key secret]
@@ -26,7 +29,7 @@
   [gurl method]
   (let [signer (OAuthHmacSigner.)
         params (OAuthParameters.)]
-    (set! (. params consumerKey) (:key *factual-config*))
+   (set! (. params consumerKey) (:key *factual-config*))
     (doto params
       (.computeNonce)
       (.computeTimestamp))
@@ -47,9 +50,10 @@
     req))
 
 (defn get-resp
-  "gurl must be a GenericUrl."
+  "Takes a GenericUrl, executes it, and returns the
+   resulting HttpResponse."
   [gurl]
-  (slurp (reader (.getContent (.execute (make-req gurl))))))
+  (.execute (make-req gurl)))
 
 (defn make-gurl-map
   "Builds a GenericUrl pointing to the given path on Factual's API,
@@ -96,6 +100,20 @@
         opts (:opts gurl-map)]
     (factual-error. code msg opts)))
 
+(defn get-content [resp]
+  (slurp (reader (.getContent resp))))
+
+(defn debug-resp [resp content]
+  (println "--- clj-factual debug ---")
+  (println "req url:" (.build (. (.request resp) url)))
+  (let [hdrs (into {} (.canonicalMap (. resp headers)))]
+    (println "resp headers:")
+    (clojure.pprint/pprint hdrs))
+  (println "resp status code:" (. resp statusCode))
+  (println "resp status message:" (. resp statusMessage))
+  (println "resp body:")
+  (println content))
+
 (defn get-results
   "Executes the specified query and returns the results.
    The returned results will have metadata associated with it,
@@ -106,7 +124,10 @@
    passed in by user code."
   ([gurl-map]
      (try
-       (do-meta (read-json (get-resp (:gurl gurl-map))))
+       (let [resp (get-resp (:gurl gurl-map))
+             content (get-content resp)]
+         (when *debug* (debug-resp resp content))
+         (do-meta (read-json content)))
        (catch RuntimeException re
          ;; would be nice if HttpResponseException was at the top
          ;; level, however seems like it comes back nested at least
@@ -166,7 +187,10 @@
   {:pre [(:table q)(:select q)]}
   (get-results (str "t/" (name (:table q)) "/facets") (dissoc q :table)))
 
-(defn schema [table]
+(defn schema
+  "Returns the schema of the specified table, as a hash-map. Example usage:
+   (schema :places)"
+  [table]
   (get-results (str "t/" (name table) "/schema") []))
 
 (defn crosswalk [& {:as opts}]
@@ -179,3 +203,8 @@
 (defn resolved [values]
   (first (filter :resolved
                  (get-results "places/resolve" {:values values}))))
+
+(defmacro with-debug
+  [& body]
+  `(binding [*debug* true]
+     ~@body))
