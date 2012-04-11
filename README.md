@@ -394,9 +394,9 @@ Now we can do this:
 
 # Debug mode
 
-This driver and the Factual service, should always work perfectly, all the time. But in the highly unlikely, almost impossible event that things go wrong, there is a debug mode that will help you and us troubleshoot.
+This driver and the Factual service should always work perfectly, all the time. But in the highly unlikely, almost impossible event that things go wrong, there is a debug mode that will help with troubleshooting.
 
-If you wrap your call(s) with the <tt>with-debug</tt> macro, verbose debug information will be sent to stdout. This will provide details about the request sent to Factual, and the response that was returned.
+If you wrap your call(s) with the <tt>with-debug</tt> macro, verbose debug information will be sent to stdout. This will provide details about the request sent to Factual and the response that was returned.
 
 Example use of the <tt>with-debug</tt> macro:
 
