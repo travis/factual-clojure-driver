@@ -5,7 +5,7 @@
   (:use [clojure.data.json :only (json-str read-json)])
   (:use [clojure.java.io :only (reader)])
   (:use [slingshot.slingshot :only [throw+]])
-  (:import (com.google.api.client.http GenericUrl HttpResponseException HttpHeaders)))
+  (:import (com.google.api.client.http UrlEncodedContent GenericUrl HttpResponseException HttpHeaders)))
 
 ;; TODO: Factor out oauth/request solution into its own lib?
 
@@ -46,7 +46,7 @@
         req (.buildGetRequest factory gurl)
         heads (HttpHeaders.)]
     (.set heads "X-Factual-Lib" DRIVER_VERSION_TAG)
-    (set! (. req headers) heads)
+    (.setHeaders req heads)
     req))
 
 (defn get-resp
@@ -94,9 +94,9 @@
    the error response, which includes things like status code, status message, as
    well as the original opts used to create the request."
   [hre gurl-map]
-  (let [res (. hre response)
-        code (. res statusCode)
-        msg (. res statusMessage)
+  (let [res (.getResponse hre)
+        code (.getStatusCode res)
+        msg (.getStatusMessage res)
         opts (:opts gurl-map)]
     (factual-error. code msg opts)))
 
@@ -106,7 +106,7 @@
 (defn debug-resp [resp content]
   (println "--- clj-factual debug ---")
   (println "req url:" (.build (. (.request resp) url)))
-  (let [hdrs (into {} (.canonicalMap (. resp headers)))]
+  (let [hdrs (into {} (.canonicalMap (.getHeaders resp)))]
     (println "resp headers:")
     (clojure.pprint/pprint hdrs))
   (println "resp status code:" (. resp statusCode))
