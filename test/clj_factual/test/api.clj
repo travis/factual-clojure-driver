@@ -19,6 +19,11 @@
 (deftest test-fetch-random-sample
   (is (< 10 (count (api/fetch {:table :places})))))
 
+(deftest test-fetch-filters
+  (let [res (api/fetch {:table :restaurants-us :filters {:name "Starbucks"}})
+        uniq-names (vec (distinct (map :name res)))]
+    (is (= ["Starbucks"] uniq-names))))
+
 (deftest test-fetch-factual-error
   (try+
     (api/fetch {:table :places
