@@ -46,12 +46,14 @@
 
 (defn debug-resp [resp body]
   (println "--- clj-factual debug ---")
-  (println "req url:" (.build (. (.request resp) url)))
-  (let [hdrs (into {} (.canonicalMap (.getHeaders resp)))]
+  (let [req (.getRequest resp)
+        gurl (.getUrl req)
+        hdrs (into {} (.getHeaders resp))]
+    (println "req url:" (.build gurl))
+    (println "resp status code:" (.getStatusCode resp))
+    (println "resp status message:" (.getStatusMessage resp))    
     (println "resp headers:")
     (clojure.pprint/pprint hdrs))
-  (println "resp status code:" (. resp statusCode))
-  (println "resp status message:" (. resp statusMessage))
   (println "resp body:")
   (println body))
 
