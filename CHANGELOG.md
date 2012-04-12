@@ -7,4 +7,8 @@
   * Removed support for CrossRef
   * Removed demo.clj and added real unit tests
   * Upgraded google-api-client to 1.8.0-beta
+  * Added support for Facets
+  * Added support for Contribute
+  * Added support for Flag
+  * Added debug mode
 

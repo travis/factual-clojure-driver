@@ -44,7 +44,7 @@
         msg (.getStatusMessage res)]
     (factual-error. code msg opts)))
 
-(defn debug-resp [resp content]
+(defn debug-resp [resp body]
   (println "--- clj-factual debug ---")
   (println "req url:" (.build (. (.request resp) url)))
   (let [hdrs (into {} (.canonicalMap (.getHeaders resp)))]
@@ -53,24 +53,27 @@
   (println "resp status code:" (. resp statusCode))
   (println "resp status message:" (. resp statusMessage))
   (println "resp body:")
-  (println content))
+  (println body))
 
 (defn get-results
-  "Executes the specified query and returns the results.
+  "Executes the specified request and returns the results.
+
+   The incoming argument must be a map representing the request.
+
    The returned results will have metadata associated with it,
    built from the results metadata returned by Factual.
 
    In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
-  [{:keys [method path params body]}]
+   [{:keys [method path params content] :or {method :get}}]
      (try
        (let [url (str *base-url* path)
              headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-             resp (http/request {:method :get :url url :headers headers :params params :auth *factual-config*})
-             content (slurp (reader (.getContent resp)))]
-         (when *debug* (debug-resp resp content))
-         (do-meta (read-json content)))
+             resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
+             body (slurp (reader (.getContent resp)))]
+         (when *debug* (debug-resp resp body))
+         (do-meta (read-json body)))
        (catch RuntimeException re
          ;; would be nice if HttpResponseException was at the top
          ;; level, however seems like it comes back nested at least
@@ -145,7 +148,24 @@
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
 
-#_(defn suggest
-  {:pre [(:table q)(:user q)]}
-  [table values]
-  (get-post-results (str "t/" (name table) "/suggest") values))
+(defn contribute [c]
+  {:pre [(:table c)(:values c) (:user c)]}
+  (let [path (str "t/" (name (:table c)) "/contribute")
+        params {:user (:user c)}]
+    (get-results {:path path :method :post :params params :content (:values c)})))
+
+(defn flag
+  "Flags a specified entity.
+
+   f must be a hash-map containing:
+     :table :id :problem :user
+   f may optionally contain
+     :comment :reference
+
+   :problem must be one of:
+     :duplicate, :inaccurate, :inappropriate, :nonexistent, :spam, :other"
+  [f]
+  {:pre [(:table f)(:id f)(:problem f) (:user f)]}
+  (let [path (str "t/" (name (:table f)) "/" (name (:id f)) "/flag")
+        content (select-keys f [:problem :user :comment :reference])]
+    (get-results {:path path :method :post :content content})))
