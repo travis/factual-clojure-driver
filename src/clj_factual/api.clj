@@ -1,13 +1,10 @@
 (ns clj-factual.api
   (:refer-clojure :exclude [resolve])
-  (:import (com.google.api.client.auth.oauth OAuthHmacSigner OAuthParameters))
-  (:import (com.google.api.client.http.javanet NetHttpTransport))
-  (:use [clojure.data.json :only (json-str read-json)])
-  (:use [clojure.java.io :only (reader)])
-  (:use [slingshot.slingshot :only [throw+]])
-  (:import (com.google.api.client.http UrlEncodedContent GenericUrl HttpResponseException HttpHeaders)))
-
-;; TODO: Factor out oauth/request solution into its own lib?
+  (:require [clj-factual.http :as http])
+  (:use [clojure.data.json :only (read-json)])
+  (:use [slingshot.slingshot :only [throw+]]
+        [clojure.java.io :only (reader)])
+  (:import (com.google.api.client.http HttpResponseException)))
 
 (def DRIVER_VERSION_TAG "factual-clojure-driver-v1.3.1")
 
@@ -21,60 +18,6 @@
 (defn factual!
   [key secret]
   (def ^:dynamic *factual-config* {:key key :secret secret}))
-
-(defn oauth-params
-  "Returns configured OAuth params for the specified request.
-   gurl must be a GenericUrl.
-
-   method should be :get or :post"
-  [gurl method]
-  (let [signer (OAuthHmacSigner.)
-        params (OAuthParameters.)
-        method (method {:get "GET" :post "POST"})]
-   (set! (. params consumerKey) (:key *factual-config*))
-    (doto params
-      (.computeNonce)
-      (.computeTimestamp))
-    (set! (. signer clientSharedSecret) (:secret *factual-config*))
-    (set! (. params signer) signer)
-    (.computeSignature params method gurl)
-    params))
-
-(defn make-gurl
-  "Builds a GenericUrl pointing to the given path on Factual's API,
-   including params as key value parameters in the query string.
-
-   params should be a hashmap with all desired query parameters for
-   the resulting url. Values in opts should be primitives or hash-maps;
-   they will be coerced to the proper json string representation for
-   inclusion in the url query string.
-
-   Returns a hash-map that holds the GenericUrl (as :gurl), as well as
-   the original opts (as :opts). This is useful later for error
-   handling, in order to include opts in the thrown error."
-  ([url params]
-    (let [gurl (GenericUrl. url)]
-      (doseq [[k v] params]
-        (.put gurl
-          ;; query param name    
-          (name k)
-          ;; query param value
-          (if (or (keyword? v) (string? v))
-            (name v)
-            (json-str v))))
-      gurl))
-  ([path]
-     (make-gurl path nil)))
-
-;;TODO: use content-type, body
-(defn request [{:keys [method url content-type params body headers]}]
-  (let [gurl (make-gurl url params)
-        factory (.createRequestFactory (NetHttpTransport.) (oauth-params gurl method))
-        req (if (= :post method)
-              (.buildPostRequest factory gurl)
-              (.buildGetRequest factory gurl))]
-    (when headers (.setHeaders req (doto (HttpHeaders.) (.putAll headers))))
-    (.execute req)))
 
 (defn do-meta [res]
   (let [data (or
@@ -101,9 +44,6 @@
         msg (.getStatusMessage res)]
     (factual-error. code msg opts)))
 
-(defn get-content [resp]
-  (slurp (reader (.getContent resp))))
-
 (defn debug-resp [resp content]
   (println "--- clj-factual debug ---")
   (println "req url:" (.build (. (.request resp) url)))
@@ -127,8 +67,8 @@
      (try
        (let [url (str *base-url* path)
              headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-             resp (request {:method :get :url url :headers headers :params params})
-             content (get-content resp)]
+             resp (http/request {:method :get :url url :headers headers :params params :auth *factual-config*})
+             content (slurp (reader (.getContent resp)))]
          (when *debug* (debug-resp resp content))
          (do-meta (read-json content)))
        (catch RuntimeException re
