@@ -1,6 +1,6 @@
 # About
 
-clj-factual is a Clojure driver for Factual's API. It supports rich queries across Factual's datasets, including support for the Crosswalk and Resolve services.
+factual-clojure-driver is a Clojure driver for Factual's API. It supports rich queries across Factual's datasets, including support for the Crosswalk and Resolve services.
 
 Factual's [web-based API](http://developer.factual.com) offers:
 
@@ -10,9 +10,9 @@ Factual's [web-based API](http://developer.factual.com) offers:
 
 # Installation
 
-clj-factual is hosted at [Clojars](http://clojars.org/clj-factual). Just add this to your dependencies:
+The driver is hosted at [Clojars](http://clojars.org/factual-clojure-driver). Just add this to your dependencies:
 
-	[clj-factual "1.3.1"]
+	[factual-clojure-driver "1.3.1"]
 
 # Basics
 
@@ -20,7 +20,7 @@ clj-factual is hosted at [Clojars](http://clojars.org/clj-factual). Just add thi
 
 ````clojure
 (ns yournamespace.core
-  (:require [clj-factual.api :as facts]))
+  (:require [factual.api :as facts]))
   (facts/factual! "YOUR_FACTUAL_KEY" "YOUR_FACTUAL_SECRET")
 ````
 
@@ -114,7 +114,7 @@ More examples:
 
 # Row Filters
 
-clj-factual supports all available row filtering logic. Examples:
+The driver supports all available row filtering logic. Examples:
 
 ````clojure
 ;;; Fetch places whose name field starts with "Starbucks"
@@ -281,14 +281,14 @@ You can get the schema for a specific table like this:
 
 # Handling Bad Responses
 
-clj-factual uses Slingshot to indicate API errors. If an API error is encountered, a Slingshot stone called factual-error will be thrown.
+The driver uses Slingshot to indicate API errors. If an API error is encountered, a Slingshot stone called factual-error will be thrown.
 
 The factual-error will contain information about the error, including the server response code and any options you used to create the query.
 
 Example:
 
 ````clojure
-;  (:import [clj_factual.api factual-error])
+;  (:import [factual.api factual-error])
 (try+
 	(facts/fetch {:table :places :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :BAD :PARAM}})
 	(catch factual-error {code :code message :message opts :opts}
@@ -296,8 +296,6 @@ Example:
 	  (println "Message:" message)
 	  (println "Opts:" opts)))
 ````
-
-<b>WARNING:</b> Please note the underscore in the import statement, in clj_factual.
 
 # An Example of Tying Things Together
 

@@ -1,6 +1,6 @@
-(ns clj-factual.api
+(ns factual.api
   (:refer-clojure :exclude [resolve])
-  (:require [clj-factual.http :as http])
+  (:require [factual.http :as http])
   (:use [clojure.data.json :only (read-json)])
   (:use [slingshot.slingshot :only [throw+]]
         [clojure.java.io :only (reader)])
@@ -45,7 +45,7 @@
     (factual-error. code msg opts)))
 
 (defn debug-resp [resp body]
-  (println "--- clj-factual debug ---")
+  (println "--- factual debug ---")
   (let [req (.getRequest resp)
         gurl (.getUrl req)
         hdrs (into {} (.getHeaders resp))]

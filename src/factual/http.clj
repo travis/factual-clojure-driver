@@ -1,4 +1,4 @@
-(ns clj-factual.http
+(ns factual.http
   (:import (com.google.api.client.http UrlEncodedContent GenericUrl HttpHeaders))
   (:import (com.google.api.client.auth.oauth OAuthHmacSigner OAuthParameters))
   (:import (com.google.api.client.http.javanet NetHttpTransport))

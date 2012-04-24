@@ -1,6 +1,6 @@
-(ns clj-factual.test.api
-  (:require [clj-factual.api :as api])
-  (:import [clj_factual.api factual-error])
+(ns factual.test.api
+  (:require [factual.api :as api])
+  (:import [factual.api factual-error])
   (:use [clojure.test]
         [clojure.data.json :only (json-str read-json)]
         [slingshot.slingshot]))
