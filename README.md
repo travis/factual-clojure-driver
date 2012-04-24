@@ -20,7 +20,7 @@ clj-factual is hosted at [Clojars](http://clojars.org/clj-factual). Just add thi
 
 ````clojure
 (ns yournamespace.core
-  (:use [clj-factual.api :as facts]))
+  (:require [clj-factual.api :as facts]))
   (facts/factual! "YOUR_FACTUAL_KEY" "YOUR_FACTUAL_SECRET")
 ````
 
