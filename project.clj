@@ -4,6 +4,6 @@
   :dependencies [
     [com.google.api-client/google-api-client "1.8.0-beta"]
     [org.clojure/clojure "1.4.0"]
-    [org.clojure/data.json "0.1.1"]
+    [org.clojure/data.json "0.1.2"]
     [slingshot "0.10.2"]]
   :dev-dependencies [[lein-clojars "0.6.0"]])
