@@ -21,14 +21,14 @@ The driver is hosted at [Clojars](http://clojars.org/factual-clojure-driver). Ju
 ````clojure
 (ns yournamespace.core
   (:require [factual.api :as facts]))
-  (facts/factual! "YOUR_FACTUAL_KEY" "YOUR_FACTUAL_SECRET")
+  (fact/factual! "YOUR_FACTUAL_KEY" "YOUR_FACTUAL_SECRET")
 ````
 
 ## Simple Fetch
 
 ````clojure
 ;; Fetch 3 random Places from Factual
-(facts/fetch {:table :places :limit 3})
+(fact/fetch {:table :places :limit 3})
 ````
 
 <tt>fetch</tt> takes a hash-map as its argument, which specifies the full query. The only required entry is :table, which must be associated with valid Factual table name. Optional query parameters, such as row filters and geolocation, are specified with further entries in q.
@@ -45,13 +45,13 @@ More examples:
 
 ````clojure
 ;; Sample three business names from the Places dataset (U.S. points of interest):
-> (map :name (facts/fetch {:table :places :limit 3}))
+> (map :name (fact/fetch {:table :places :limit 3}))
 ("Lorillard Tobacco Co." "Imediahouse" "El Monte Wholesale Meats")
 ````
 
 ````clojure
 ;; Return rows with a name equal to "Stand" within 5000 meters of the specified lat/lng
-(facts/fetch {:table :places
+(fact/fetch {:table :places
 	      :filters {:name "Stand"}
 	      :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})
 ````
@@ -59,7 +59,7 @@ More examples:
 ````clojure
 ;; A function that finds restaurants near a given latitude/longitude that deliver dinner, sorted by distance:
 (defn deliver-dinner [lat lon]
-  (facts/fetch {:table :restaurants-us
+  (fact/fetch {:table :restaurants-us
 	        :filters {:meal_dinner {:$eq true}
 	                  :meal_deliver {:$eq true}}
 	        :geo {:$circle {:$center [lat lon]
@@ -72,38 +72,38 @@ More examples:
 <tt>fetch</tt> allows you to specify any valid Factual dataset. E.g.:
 
 ````clojure
-(facts/fetch {:table :places :limit 3})
-(facts/fetch {:table :restaurants-us :limit 3})
-(facts/fetch {:table :global :limit 3})
+(fact/fetch {:table :places :limit 3})
+(fact/fetch {:table :restaurants-us :limit 3})
+(fact/fetch {:table :global :limit 3})
 ````
 
 ## More Fetch Examples
 
 ````clojure
 ;; Return rows where region equals "CA"
-(facts/fetch {:table :places :filters {"region" "CA"}})
+(fact/fetch {:table :places :filters {"region" "CA"}})
 ````
 
 ````clojure
 ;; Return rows where name begins with "Starbucks" and return both the data and a total count of the matched rows:
-(facts/fetch :places :filters {:name {:$bw "Starbucks"}} :include_count true)
+(fact/fetch :places :filters {:name {:$bw "Starbucks"}} :include_count true)
 ````
 
 ````clojure
 ;; Do a full text search for rows that contain "Starbucks" or "Santa Monica"
-(facts/fetch {:table :places :q "Starbucks,Santa Monica"})
+(fact/fetch {:table :places :q "Starbucks,Santa Monica"})
 ````
 
 ````clojure
 ;; Do a full text search for rows that contain "Starbucks" or "Santa Monica" and return rows 20-40
-(facts/fetch {:table :places :q "Starbucks,Santa Monica" :offset 20 :limit 20})
+(fact/fetch {:table :places :q "Starbucks,Santa Monica" :offset 20 :limit 20})
 ````
 
 ````clojure
 ;; Count all businesses in Chiang Mai, Thailand that are operational and have a telephone number
 (get-in
   (meta
-	  (facts/fetch {:table :global
+	  (fact/fetch {:table :global
        	               	:include_count true
 	            	:filters {:country {:$eq "TH"}
 			          :region {:$eq "Chiang Mai"}
@@ -118,17 +118,17 @@ The driver supports all available row filtering logic. Examples:
 
 ````clojure
 ;;; Fetch places whose name field starts with "Starbucks"
-(facts/fetch {:table :places :filters {:name {:$bw "Starbucks"}}})
+(fact/fetch {:table :places :filters {:name {:$bw "Starbucks"}}})
 ````
 
 ````clojure
 ;;; Fetch U.S. restaurants that have a blank telephone number
-(facts/fetch {:table :restaurants-us :filters {:tel {:$blank true}}})
+(fact/fetch {:table :restaurants-us :filters {:tel {:$blank true}}})
 ````
 
 ````clojure
 ;;; Fetch U.S. restaurants from one of five states
-(facts/fetch {:table :restaurants-us
+(fact/fetch {:table :restaurants-us
               :filters {:region {:$in ["MA", "VT", "NH", "RI", "CT"]}}})
 ````
 
@@ -217,57 +217,57 @@ The driver supports all available row filtering logic. Examples:
 
 ````clojure
 ;; Count Starbucks in the US by city and state
-(facts/facets {:table :global :select "locality,region" :q "starbucks" :filters {:country :US}})
+(fact/facets {:table :global :select "locality,region" :q "starbucks" :filters {:country :US}})
 ````
 
 ````clojure
 ;; Count businesses by category 5 km around a lat, lon:
-(facts/facets {:table :global :select "category" :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})
+(fact/facets {:table :global :select "category" :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})
 ````
 
 # Crosswalk Usage
 
 ````clojure
 ;; Return all Crosswalk data for the place identified by the specified Factual ID
-(facts/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77")
+(fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77")
 ````
 
 ````clojure
 ;; Return Loopt.com Crosswalk data for the place identified by the specified Factual ID
-(facts/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :only "loopt")
+(fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :only "loopt")
 ````
 
 ````clojure
 ;; Return all Crosswalk data for the place identified by the specified Foursquare ID
-(facts/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3")
+(fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3")
 ````
 
 ````clojure
 ;; Return the Yelp.com Crosswalk data for the place identified by a Foursquare ID: 
-(facts/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3" :only "yelp")
+(fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3" :only "yelp")
 ````
 
 # Resolve Usage
 
 The <tt>resolve</tt> function takes a hash-map of values indicating what you know about a place. It returns the set of potential matches, including a similarity score.
 
-	> (facts/resolve {:name "ino", :latitude 40.73, :longitude -74.01}))
+	> (fact/resolve {:name "ino", :latitude 40.73, :longitude -74.01}))
 	
 The <tt>resolved</tt> function takes a hash-map of values indicating what you know about a place. It returns either a certain match, or nil.
 
-	> (facts/resolved {:name "ino", :latitude 40.73, :longitude -74.01}))
+	> (fact/resolved {:name "ino", :latitude 40.73, :longitude -74.01}))
 
 # Results Metadata
 
 Factual's API returns more than just results rows. It also returns various metadata about the results. You can access this metadata by using Clojure's <tt>meta</tt> function on your results. Examples:
 
 ````clojure
-> (meta (facts/fetch {:table :places :filters {:name {:$bw "Starbucks"}} :include_count true}))
+> (meta (fact/fetch {:table :places :filters {:name {:$bw "Starbucks"}} :include_count true}))
 {:total_row_count 8751, :included_rows 20, :version 3, :status "ok"}
 ````
 
 ````clojure
-> (meta (facts/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77"))
+> (meta (fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77"))
 {:total_row_count 13, :included_rows 13, :version 3, :status "ok"}
 ````
 
@@ -290,7 +290,7 @@ Example:
 ````clojure
 ;  (:import [factual.api factual-error])
 (try+
-	(facts/fetch {:table :places :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :BAD :PARAM}})
+	(fact/fetch {:table :places :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :BAD :PARAM}})
 	(catch factual-error {code :code message :message opts :opts}
 	  (println "Got bad resp code:" code)
 	  (println "Message:" message)
@@ -305,7 +305,7 @@ Let's create a simple function that finds Places close to a lat/lng, with "cafe"
 (defn nearby-cafes
 	"Returns up to 12 cafes within 5000 meters of the specified location."
 	[lat lon]
-	(facts/fetch {:table :places
+	(fact/fetch {:table :places
                       :q "cafe"
 	              :filters {:category {:$eq "Food & Beverage"}}
 	              :geo {:$circle {:$center [lat lon]
@@ -354,7 +354,7 @@ That first one, "Aroma Cafe", sounds interesting. Let's see the details:
 So I wonder what Yelp has to say about this place. Let's use Crosswalk to find out. Note that we use Aroma Cafe's :factual_id from the above results...
 
 ````clojure
-	> (facts/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7" :only "yelp")
+	> (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7" :only "yelp")
 	({:factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7",
 	  :namespace :yelp,
 	  :namespace_id "AmtMwS2wCbr3l-_S0d9AoQ",
@@ -366,7 +366,7 @@ That gives me the yelp URL for the Aroma Cafe, so I can read up on it on Yelp.co
 Of course, Factual supports other Crosswalked sources besides Yelp. If you look at each row returned by the <tt>crosswalk</tt> function, you'll see there's a <tt>:namespace</tt> in each one. Let's find out what namespaces are available for the Aroma Cafe:
 
 ````clojure
-	> (map :namespace (facts/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7"))
+	> (map :namespace (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7"))
 	(:merchantcircle :urbanspoon :yahoolocal :foursquare :yelp ... )
 ````
 
@@ -375,7 +375,7 @@ Let's create a function that takes a :factual_id and returns a hashmap of each v
 ````clojure
 (defn namespaces->urls [factid]
 	(into {} (map #(do {(:namespace %) (:url %)})
-	  (facts/crosswalk :factual_id factid))))
+	  (fact/crosswalk :factual_id factid))))
 ````
 
 Now we can do this:
