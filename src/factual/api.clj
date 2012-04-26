@@ -86,52 +86,111 @@
        (catch HttpResponseException hre
          (throw+ (new-error hre params)))))
 
-(defn fetch
+(defn fetch-disp
+  "Dispatch method for fetch. Returns:
+   :q if argument is a query map
+   :table if argument is just the table name
+   :table-and-q if 2 arguments, expected to be table name and query map"
+  [& args]
+  (if (= 1 (count args))
+    (if (map? (first args))
+      :q :table)
+      :table-and-q))
+
+(defmulti fetch
   "Runs a fetch request against Factual and returns the results.
+
+   Supports 3 variations depending on the arguments you pass in:
+
+   Variation 1: [q]
    q is a hash-map specifying the full query. The only required
    entry is :table, which must be associated with valid Factual
-   table name.
+   table name. Optional query parameters, such as row filters and geolocation
+   queries, are specified with further entries in q. Example usages:
+     (fetch {:table :global})
+     (fetch {:table :places :q \"cafe\"})
 
-   Optional query parameters, such as row filters and geolocation
-   queries, are specified with further entries in q.
+  Variation 2: [table q]
+  table is the name of a valid Factual table.
+  q is a hash-map specifying the full query, such as row filters and geolocation
+  queries. Example usage:
+    (fetch :places {:q \"cafe\" :limit 10})
 
-   Example usages:
+  Variation 3: [table]
+  table is the name of a valid Factual table. This is a very limited call, since
+  it does not support any query parameters and will therefore just return a
+  random sample of results from the specified table. Example usage:
+    (fetch :places)"
+  fetch-disp)
 
-   (fetch {:table :global})
-
-   (fetch {table :places :q \"cafe\"})
-
-   (fetch
-     {:table  :restaurants-us
-      :q \"cafe\"
-      :offset 20
-      :limit 10
-      :filters {:name {:$bw \"starbucks\" :locality {:$eq \"los angeles\"}}}}))"
+(defmethod fetch :q
   [q]
   {:pre [(:table q)]}
   (get-results {:path (str "t/" (name (:table q))) :params (dissoc q :table)}))
 
-(defn facets
+(defmethod fetch :table
+  [table]
+  (fetch {:table table}))
+
+(defmethod fetch :table-and-q
+  [table q]
+  (fetch (assoc q :table table)))
+
+(defn facets-disp
+  "Dispatch method for facets. Returns:
+   :q if argument is a query map
+   :table-and-select if table name and select(s) are specified
+   :table-and-q if table name and query options are specified"
+  [& args]
+  (if (= 1 (count args))
+    :q
+    (if (map? (second args))
+      :table-and-q
+      :table-and-select)))
+
+(defmulti facets
   "Runs a Facets request against Factual and returns the results.
 
-   q is a hash-map specifying the full query. The required entries
-   are:
+   Supports 3 variations depending on the arguments you pass in:
 
-     :table  the name of a valid Factual table, e.g. :places
-     :select the field(s) to Facet. comma-delimted string, e.g. \"locality,region\"
+   Variation 1: [q]
+   q is a hash-map specifying the full query, which can include things like row filters and
+   geolocation filtering. Required entries:
+     :table   the name of a valid Factual table, e.g. :places
+     :select  the field(s) to Facet as a comma-delimted string, e.g. \"locality,region\"
+   Example usages:
+     (facets {:table :global :select \"locality\"})
+     (facets {:table :places :select \"locality,region\" :q \"starbucks\"})
 
-   Optional query parameters, such as row filters and geolocation
-   queries, are specified with further entries in q.
+   Variation 2: [table q]
+   table is the name of a valid Factual table.
+   q is a hash-map specifying the full query, which can include things like row filters and
+   geolocation filtering. Required entry:
+     :select  the field(s) to Facet as a comma-delimted string, e.g. \"locality,region\"
+   Example usage:
+     (facets :global {:select \"locality,region\" :q \"starbucks\"})
 
-   Facets give you row counts for Factual tables, grouped by facets of the data.
-   For example, you may want to query all businesses within 1 mile of a location
-   and for a count of those businesses by category:
+   Variation 3: [table select]
+   table is the name of a valid Factual table.
+   select is the field(s) to Facet as a comma-delimted string, e.g. \"locality,region\"
+   This is a somewhat limited variation, since you can't specify any additional query options. But
+   it's useful if you want overall counts, e.g. 'how many U.S. restaurants are there in each locality?':
+     (facets :us-restaurants \"locality\")"
+  facets-disp)
 
-   (facets {:table :global :select \"category\"
-            :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})"
+(defmethod facets :q
   [q]
   {:pre [(:table q)(:select q)]}
-  (get-results {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)}))
+  (get-results {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)}))  
+
+(defmethod facets :table-and-q
+  [table q]
+  {:pre [(:table q)(:select q)]}
+  (facets {assoc q :table table}))
+
+(defmethod facets :table-and-select
+  [table select]
+  (facets {:table table :select select}))
 
 (defn schema
   "Returns the schema of the specified table, as a hash-map. Example usage:
@@ -150,9 +209,9 @@
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
 
-(defn contribute [c]
+(defn submit [c]
   {:pre [(:table c)(:values c) (:user c)]}
-  (let [path (str "t/" (name (:table c)) "/contribute")
+  (let [path (str "t/" (name (:table c)) "/submit")
         params {:user (:user c)}]
     (get-results {:path path :method :post :params params :content (:values c)})))
 
