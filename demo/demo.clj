@@ -16,16 +16,3 @@
   (fact/fetch :places {:limit 3}))
 
 
-(defmulti myf (fn [& args]
-                 (if (= 1 (count args))
-                   (if (map? (first args))
-                     :q :table)
-                   :table-q)))
-                                      
-(defmethod myf :q [m]
-  (println "Q VERSION"))
-(defmethod myf :table [m]
-  (println "TABLE VERSION"))
-(defmethod myf :table-q [table q]
-  (println "TABLE AND Q VERSION"))
-
