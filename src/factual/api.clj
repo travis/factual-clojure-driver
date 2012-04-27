@@ -1,6 +1,7 @@
 (ns factual.api
   (:refer-clojure :exclude [resolve])
   (:require [factual.http :as http])
+  ;;(:require [oauth.v1 :as oa])
   (:use [clojure.data.json :only (read-json)])
   (:use [slingshot.slingshot :only [throw+]]
         [clojure.java.io :only (reader)])
@@ -8,16 +9,27 @@
 
 (def DRIVER_VERSION_TAG "factual-clojure-driver-v1.3.1")
 
+;;TODO!: remove?
 (declare ^:dynamic *factual-config*)
+
 (defrecord factual-error [code message opts])
 
 (def ^:dynamic *base-url* "http://api.v3.factual.com/")
+;;(def ^:dynamic *base-url* "http://api.dev.cloud.factual.com/")
+
+(def ^:dynamic *client* nil)
 
 (def ^:dynamic *debug* false)
 
 (defn factual!
   [key secret]
-  (def ^:dynamic *factual-config* {:key key :secret secret}))
+  ;;TODO!: remove?
+  (def ^:dynamic *factual-config* {:key key :secret secret})
+  (def ^:dynamic *client* (oa/make-consumer
+                           :oauth-consumer-key key
+                           :oauth-consumer-secret secret
+                           :headers {"X-Factual-Lib" DRIVER_VERSION_TAG}))
+  )
 
 (defn do-meta [res]
   (let [data (or
@@ -72,6 +84,34 @@
      (try
        (let [url (str *base-url* path)
              headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
+             resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
+             body (slurp (reader (.getContent resp)))]
+         (when *debug* (debug-resp resp body))
+         (do-meta (read-json body)))
+       (catch RuntimeException re
+         ;; would be nice if HttpResponseException was at the top
+         ;; level, however seems like it comes back nested at least
+         ;; some of the time
+         (if (= HttpResponseException (class (.getCause re)))
+           (throw+ (new-error (.getCause re) params))
+           (throw re)))
+       (catch HttpResponseException hre
+         (throw+ (new-error hre params)))))
+
+#_(defn get-results2
+  "Executes the specified request and returns the results.
+
+   The incoming argument must be a map representing the request.
+
+   The returned results will have metadata associated with it,
+   built from the results metadata returned by Factual.
+
+   In the case of a bad response code, throws a factual-error record
+   as a slingshot stone. The record will include any opts that were
+   passed in by user code."
+   [{:keys [method path params content] :or {method :get}}]
+     (try
+       (let [url (str *base-url* path)
              resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
              body (slurp (reader (.getContent resp)))]
          (when *debug* (debug-resp resp body))
@@ -213,6 +253,7 @@
 (defn submit [c]
   {:pre [(:table c)(:values c) (:user c)]}
   (let [path (str "t/" (name (:table c)) "/submit")
+        _ (println "PATH" path)
         params {:user (:user c)}]
     (get-results {:path path :method :post :params params :content (:values c)})))
 
