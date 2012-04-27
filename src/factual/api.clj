@@ -167,7 +167,8 @@
    q is a hash-map specifying the full query, which can include things like row filters and
    geolocation filtering. Required entry:
      :select  the field(s) to Facet as a comma-delimted string, e.g. \"locality,region\"
-   Example usage:
+   Example usages:
+     (facets :restaurants-us {:select \"region\" :limit 50})
      (facets :global {:select \"locality,region\" :q \"starbucks\"})
 
    Variation 3: [table select]
@@ -185,8 +186,8 @@
 
 (defmethod facets :table-and-q
   [table q]
-  {:pre [(:table q)(:select q)]}
-  (facets {assoc q :table table}))
+  {:pre [(:select q)]}
+  (facets (assoc q :table table)))
 
 (defmethod facets :table-and-select
   [table select]
