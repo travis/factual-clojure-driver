@@ -1,6 +1,6 @@
-(defproject factual/factual-clojure-driver "1.3.1-SNAPSHOT"
+(defproject factual/factual-clojure-driver "1.3.1"
   :url "http://github.com/Factual/factual-clojure-driver"
-  :description "A Clojure driver for Factual's public API"
+  :description "Officially supported Clojure driver for Factual's public API"
   :dependencies [
     [com.google.api-client/google-api-client "1.8.0-beta"]
     [org.clojure/clojure "1.4.0"]
