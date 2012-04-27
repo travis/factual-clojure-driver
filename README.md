@@ -298,12 +298,13 @@ Resolve provides an entity resolution API that makes partial records complete, m
 
 The <tt>resolve</tt> function takes a hash-map of values indicating what you know about a place. It returns the set of potential matches, including a similarity score.
 
-	> (fact/resolve {:name "ino", :latitude 40.73, :longitude -74.01}))
+Example:
+
+````clojure
+; Find the entity named "McDonald's" with only a specified lat/lng
+(fact/resolve {:name "McDonalds", :latitude 34.05671 :longitude -118.42586})
+````
 	
-The <tt>resolved</tt> function takes a hash-map of values indicating what you know about a place. It returns either a certain match, or nil.
-
-	> (fact/resolved {:name "ino", :latitude 40.73, :longitude -74.01}))
-
 # Results Metadata
 
 Factual's API returns more than just results rows. It also returns various metadata about the results. You can access this metadata by using Clojure's <tt>meta</tt> function on your results. Examples:
