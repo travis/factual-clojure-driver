@@ -26,8 +26,7 @@
   "Sets this driver to use the specified base service URL.
    This could be handy for testing purposes, or if Factual is
    supporting a custom service for you. Example usage:
-     (with-service \"http://api.dev.cloud.factual.com/\"
-       (fetch :places))
+     (service! \"http://api.dev.cloud.factual\")
 
    Don't forget the leading http:// and don't forget the trailing /
    in the base url you supply."
@@ -45,12 +44,6 @@
    in the base url you supply."
   [base & body]
   `(binding [*base-url* ~base] ~@body))
-
-(defmacro with-connection [& body]
-  `(binding [*conn* (get-connection)]
-     (let [ret# (do ~@body)]
-       (.close *conn*)
-       ret#)))
 
 (defn do-meta [res]
   (let [data (or
