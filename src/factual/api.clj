@@ -16,8 +16,41 @@
 (def ^:dynamic *debug* false)
 
 (defn factual!
+  "Sets your authentication with the Factual service.
+   key is your Factual API key
+   secret is your Factual API secret"
   [key secret]
   (def ^:dynamic *factual-config* {:key key :secret secret}))
+
+(defmacro service!
+  "Sets this driver to use the specified base service URL.
+   This could be handy for testing purposes, or if Factual is
+   supporting a custom service for you. Example usage:
+     (with-service \"http://api.dev.cloud.factual.com/\"
+       (fetch :places))
+
+   Don't forget the leading http:// and don't forget the trailing /
+   in the base url you supply."
+  [base]
+  (def ^:dynamic *base-url* base))
+
+(defmacro with-service
+  "Allows temporary use of a different base service URL, within the
+   scope of body. This could be handy for testing purposes, or if
+   Factual is supporting a custom service for you. Example usage:
+     (with-service \"http://api.dev.cloud.factual.com/\"
+       (fetch :places))
+
+   Don't forget the leading http:// and don't forget the trailing /
+   in the base url you supply."
+  [base & body]
+  `(binding [*base-url* ~base] ~@body))
+
+(defmacro with-connection [& body]
+  `(binding [*conn* (get-connection)]
+     (let [ret# (do ~@body)]
+       (.close *conn*)
+       ret#)))
 
 (defn do-meta [res]
   (let [data (or
@@ -68,23 +101,23 @@
    In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
-   [{:keys [method path params content] :or {method :get}}]
-     (try
-       (let [url (str *base-url* path)
-             headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-             resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
-             body (slurp (reader (.getContent resp)))]
-         (when *debug* (debug-resp resp body))
-         (do-meta (read-json body)))
-       (catch RuntimeException re
-         ;; would be nice if HttpResponseException was at the top
-         ;; level, however seems like it comes back nested at least
-         ;; some of the time
-         (if (= HttpResponseException (class (.getCause re)))
-           (throw+ (new-error (.getCause re) params))
-           (throw re)))
-       (catch HttpResponseException hre
-         (throw+ (new-error hre params)))))
+  [{:keys [method path params content] :or {method :get}}]
+  (try
+    (let [url (str *base-url* path)
+          headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
+          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
+          body (slurp (reader (.getContent resp)))]
+      (when *debug* (debug-resp resp body))
+      (do-meta (read-json body)))
+    (catch RuntimeException re
+      ;; would be nice if HttpResponseException was at the top
+      ;; level, however seems like it comes back nested at least
+      ;; some of the time
+      (if (= HttpResponseException (class (.getCause re)))
+        (throw+ (new-error (.getCause re) params))
+        (throw re)))
+    (catch HttpResponseException hre
+      (throw+ (new-error hre params)))))
 
 (defn fetch-disp
   "Dispatch method for fetch. Returns:
@@ -210,24 +243,31 @@
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
 
-(defn submit [c]
-  {:pre [(:table c)(:values c) (:user c)]}
-  (let [path (str "t/" (name (:table c)) "/submit")
-        params {:user (:user c)}]
-    (get-results {:path path :method :post :params params :content (:values c)})))
+(defn submit
+  ([id s]
+     {:pre [(:table s) (:values s) (:user s)]}
+     (let [path (if id
+                  (str "t/" (name (:table s)) "/" (name id) "/submit")
+                  (str "t/" (name (:table s)) "/submit"))
+           params {:user (:user s)}]
+       (get-results {:path path :method :post :params params :content (:values s)})))
+  ([s]
+     (submit nil s)))
 
 (defn flag
-  "Flags a specified entity.
+  "Flags a specified entity as problematic.
+
+   id is the Factual ID for the entity to flag.
 
    f must be a hash-map containing:
-     :table :id :problem :user
+     :table :problem :user
    f may optionally contain
      :comment :reference
 
    :problem must be one of:
      :duplicate, :inaccurate, :inappropriate, :nonexistent, :spam, :other"
-  [f]
-  {:pre [(:table f)(:id f)(:problem f) (:user f)]}
-  (let [path (str "t/" (name (:table f)) "/" (name (:id f)) "/flag")
+  [id f]
+  {:pre [(:table f) (:problem f) (:user f)]}
+  (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
         content (select-keys f [:problem :user :comment :reference])]
     (get-results {:path path :method :post :content content})))

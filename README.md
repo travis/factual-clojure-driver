@@ -324,8 +324,54 @@ Factual's API returns more than just results rows. It also returns various metad
 You can get the schema for a specific table like this:
 
 ````clojure
-(schema :restaurants-us)
+(fact/schema :restaurants-us)
 ````
+
+# Submit
+
+The <tt>submit</tt> function lets you submit new or corrected data to Factual. Examples:
+
+````clojure
+; Submit a new entity to Factual's U.S. Restaurants table
+(fact/submit {:table :places :user "boris123" :values {:name "A New Restaurant" :locality "Los Angeles"}})
+````
+
+````clojure
+; Submit a correction to an existing entity in Factual's U.S. Restaurants table
+(fact/submit {:table :places :user "boris123" :values {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :name "New Name"}})
+````
+
+The :user parameter is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
+
+# Flag
+
+The <tt>flag</tt> function lets you flag a Factual entity as problematic. For example:
+
+````clojure
+(fact/flag "97598010-433f-4946-8fd5-4a6dd1639d77" {:table :places :problem :spam :user "boris_123"})
+````
+The first argument is the Factual ID of the entity you wish to flag.
+
+The second argument is a hash-map that specifies the flag, f.
+
+The :problem entry in f is required, and must be one of:
+
+<ul>
+<li>:duplicate
+<li>:inaccurate
+<li>:inappropriate
+<li>:nonexistent
+<li>:spam
+<li>:other
+</ul>
+
+The :user in f is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
+
+f may optionally contain entries for:
+<ul>
+<li>:comment
+<li>:reference
+</ul>
 
 # Handling Bad Responses
 
