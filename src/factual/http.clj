@@ -45,7 +45,17 @@
     (doseq [[k v] params]
       (.put gurl k v))
     gurl))
-    
+
+(defn debug-req [req json]
+  (println "--- request debug ----")
+    (println "req headers:")
+    (clojure.pprint/pprint (into {} (.getHeaders req)))
+  (println "req method:" (.getMethod req))
+  (println "req json params:" json)
+  (let [gurl (.getUrl req)]
+    (println "req url:" (.toString (.getUrl req))))
+  (println "----------------------"))
+
 (defn request
   "Runs the specified request and returns the resulting HttpResponse.
 
@@ -56,12 +66,13 @@
    the resulting url. Values should be primitives, vectors, or hash-maps;
    they will be coerced to the proper json string representation for
    inclusion in the url query string."
-  [{:keys [method url params content headers auth]}]
-  (let [gurl (make-gurl url (json-params params))
+  [{:keys [method url params content headers auth debug]}]
+  (let [json (json-params params)
+        gurl (make-gurl url (json-params params))
         factory (.createRequestFactory (NetHttpTransport.) (oauth-params gurl method auth))
         req (if (= :post method)
               (.buildPostRequest factory gurl (UrlEncodedContent. (json-params content)))
               (.buildGetRequest factory gurl))]
     (when headers (.setHeaders req (doto (HttpHeaders.) (.putAll headers))))
+    (when debug (debug-req req json))
     (.execute req)))
-

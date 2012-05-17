@@ -71,17 +71,16 @@
     (factual-error. code msg opts)))
 
 (defn debug-resp [resp body]
-  (println "--- factual debug ---")
+  (println "--- response debug ---")
   (let [req (.getRequest resp)
-        gurl (.getUrl req)
         hdrs (into {} (.getHeaders resp))]
-    (println "req url:" (.build gurl))
     (println "resp status code:" (.getStatusCode resp))
-    (println "resp status message:" (.getStatusMessage resp))    
+    (println "resp status message:" (.getStatusMessage resp))
     (println "resp headers:")
-    (clojure.pprint/pprint hdrs))
-  (println "resp body:")
-  (println body))
+    (clojure.pprint/pprint (into {} hdrs)))
+  (println "resp body:" body)
+  (println body)
+  (println "----------------------"))
 
 (defn get-results
   "Executes the specified request and returns the results.
@@ -98,7 +97,7 @@
   (try
     (let [url (str *base-url* path)
           headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
+          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config* :debug *debug*})
           body (slurp (reader (.getContent resp)))]
       (when *debug* (debug-resp resp body))
       (do-meta (read-json body)))
@@ -208,7 +207,7 @@
 (defmethod facets :q
   [q]
   {:pre [(:table q)(:select q)]}
-  (get-results {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)}))  
+  (get-results {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)}))
 
 (defmethod facets :table-and-q
   [table q]
@@ -236,31 +235,27 @@
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
 
-(defn submit
-  ([id s]
-     {:pre [(:table s) (:values s) (:user s)]}
-     (let [path (if id
-                  (str "t/" (name (:table s)) "/" (name id) "/submit")
-                  (str "t/" (name (:table s)) "/submit"))
-           params {:user (:user s)}]
-       (get-results {:path path :method :post :params params :content (:values s)})))
-  ([s]
-     (submit nil s)))
+(defn geopulse
+  "Runs a Geopulse request against Factual and returns the results.
 
-(defn flag
-  "Flags a specified entity as problematic.
+   q is a hash-map specifying the Geopulse query. It must contain :geo.
+   It can optionally contain :select. If :select is included, it must be a
+   comma delimited list of available Factual pulses, such as \"income\",
+   \"race\", \"age_by_gender\", etc.
 
-   id is the Factual ID for the entity to flag.
+   Example usage:
+   (geopulse {:geo {:$point [34.06021,-118.41828]}})
 
-   f must be a hash-map containing:
-     :table :problem :user
-   f may optionally contain
-     :comment :reference
+   Example usage:
+   (geopulse {:geo {:$point [34.06021,-118.41828]} :select \"income,race,age_by_gender\"})"
+  [q]
+  (get-results {:path "places/geopulse" :params q}))
 
-   :problem must be one of:
-     :duplicate, :inaccurate, :inappropriate, :nonexistent, :spam, :other"
-  [id f]
-  {:pre [(:table f) (:problem f) (:user f)]}
-  (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
-        content (select-keys f [:problem :user :comment :reference])]
-    (get-results {:path path :method :post :content content})))
+(defn reverse-geocode
+  "Given latitude lat and longitude lon, uses Factual's reverse geocoder to return the
+   nearest valid address.
+
+   Example usage:
+   (reverse-geocode 34.06021,-118.41828)"
+  [lat lon]
+  (get-results {:path "places/geocode" :params {:geo { :$point [lat lon]}}}))

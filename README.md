@@ -12,7 +12,7 @@ Factual's [web-based API](http://developer.factual.com) offers:
 
 The driver is hosted at [Clojars](http://clojars.org/factual-clojure-driver). Just add this to your dependencies:
 
-	[factual-clojure-driver "1.3.1"]
+    [factual-clojure-driver "1.3.1"]
 
 # Setup
 
@@ -81,32 +81,32 @@ Here's a demo of looking at the metadata of a response:
 ````clojure
 ;; Return rows with a name equal to "Stand" within 5000 meters of the specified lat/lng
 (fact/fetch {:table :places
-	     :filters {:name "Stand"}
-	     :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})
+         :filters {:name "Stand"}
+         :geo {:$circle {:$center [34.06018, -118.41835] :$meters 5000}}})
 ````
 
 ````clojure
 ;; Count all businesses in Chiang Mai, Thailand that are operational and have a telephone number
 (get-in
   (meta
-	  (fact/fetch {:table :global
-       	               :include_count true
-	               :filters {:country {:$eq "TH"}
-		                 :region {:$eq "Chiang Mai"}
+      (fact/fetch {:table :global
+                       :include_count true
+                   :filters {:country {:$eq "TH"}
+                         :region {:$eq "Chiang Mai"}
                                  :status {:$eq 1}
                                  :tel {:$blank false}}}))
-	  [:response :total_row_count])
+      [:response :total_row_count])
 ````
 
 ````clojure
 ;; Define function that finds restaurants near a given latitude/longitude that deliver dinner, sorted by distance:
 (defn deliver-dinner [lat lon]
   (fact/fetch {:table :restaurants-us
-	       :filters {:meal_dinner {:$eq true}
-	                 :meal_deliver {:$eq true}}
-	       :geo {:$circle {:$center [lat lon]
-	                       :$meters 4500}}
-	       :sort :$distance}))
+           :filters {:meal_dinner {:$eq true}
+                     :meal_deliver {:$eq true}}
+           :geo {:$circle {:$center [lat lon]
+                           :$meters 4500}}
+           :sort :$distance}))
 ````
 
 You could use the above function like so:
@@ -237,6 +237,45 @@ The driver supports all available row filtering logic. Examples:
   </tr>
 </table>
 
+# World Geographies
+
+World Geographies contains administrative geographies (states, counties, countries), natural geographies (rivers, oceans, continents), and assorted geographic miscallaney.  This resource is intended to complement Factual's Global Places and add utility to any geo-related content.
+
+Common use cases include:
+
+* Determining all cities within a state or all postal codes in a city
+* Creating a type-ahead placename lookup
+* Validating data against city, state, country and county names
+* A translation table to convert between the search key used by a user, i.e. '慕尼黑' or 'Munich' for the native 'München'
+
+You can use the <tt>fetch</tt> function to query World Geographies, supplying :world-geographies as the table name.
+
+Examples:
+
+````clojure
+; Get all towns surrounding Philadelphia
+(fact/fetch {:table :world-geographies
+             :select "neighbors"
+             :filters {:factual_id {:$eq "08ca0f62-8f76-11e1-848f-cfd5bf3ef515"}}})
+````
+
+````clojure
+; Find the town zipcode 95008 belongs to
+(fact/fetch {:table :world-geographies
+             :filters {:children {:$search "091c8d14-8f76-11e1-848f-cfd5bf3ef515"}}})
+````
+
+````clojure
+; Searching by placename, placetype, country and geographic hierarchy
+(fact/fetch {:table :world-geographies
+             :filters {:name {:$eq "wayne"}
+                       :country {:$eq :us}
+                       :placetype {:$eq "locality"}
+                       :ancestors {:$search "08666f5c-8f76-11e1-848f-cfd5bf3ef515"}}})
+````
+
+For more details about World Geographies, including schema, see [the main API docs for World Geographies](http://developer.factual.com/display/docs/World+Geographies).
+
 # Facets
 
 The <tt>facets</tt> function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
@@ -288,13 +327,13 @@ Examples:
 ````
 
 ````clojure
-;; Return the Yelp.com Crosswalk data for the place identified by a Foursquare ID: 
+;; Return the Yelp.com Crosswalk data for the place identified by a Foursquare ID:
 (fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3" :only "yelp")
 ````
 
 # Resolve
 
-Resolve provides an entity resolution API that makes partial records complete, matches one entity against another, and assists in de-duping and normalizing datasets. 
+Resolve provides an entity resolution API that makes partial records complete, matches one entity against another, and assists in de-duping and normalizing datasets.
 
 The <tt>resolve</tt> function takes a hash-map of values indicating what you know about a place. It returns the set of potential matches, including a similarity score.
 
@@ -304,7 +343,7 @@ Example:
 ; Find the entity named "McDonald's" with only a specified lat/lng
 (fact/resolve {:name "McDonalds", :latitude 34.05671 :longitude -118.42586})
 ````
-	
+
 # Results Metadata
 
 Factual's API returns more than just results rows. It also returns various metadata about the results. You can access this metadata by using Clojure's <tt>meta</tt> function on your results. Examples:
@@ -327,51 +366,37 @@ You can get the schema for a specific table like this:
 (fact/schema :restaurants-us)
 ````
 
-# Submit
+# Geopulse
 
-The <tt>submit</tt> function lets you submit new or corrected data to Factual. Examples:
+Factual Geopulse provides point-based access to geographic attributes: you provide a long/lat coordinate pair, Factual provides everything it knows about that geography.
 
-````clojure
-; Submit a new entity to Factual's U.S. Restaurants table
-(fact/submit {:table :places :user "boris123" :values {:name "A New Restaurant" :locality "Los Angeles"}})
+The Geopulse API is made up of several "pulses".  Pulses are georeferenced attributes generated by Factual, sourced from openly available content (such as the US Census), or provided to Factual by proprietary third-parties.
+
+You can run a Geopulse query using the <tt>geopulse</tt> function. You pass it a hash-map specifying the query parameters. It must contain <tt>:geo</tt>. It can optionally contain <tt>:select</tt>. If <tt>:select</tt> is included, it must be a comma delimited list of available Factual pulses.
+
+ Example usage:
+
+ ````clojure
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]}})
 ````
 
 ````clojure
-; Submit a correction to an existing entity in Factual's U.S. Restaurants table
-(fact/submit {:table :places :user "boris123" :values {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :name "New Name"}})
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,race,age_by_gender"})
 ````
 
-The :user parameter is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
+Available pulses include commercial_density, commercial_profile, income, race, hispanic, and age_by_gender.
 
-# Flag
+You can see a full list of available Factual pulses and their possible return values, as well as full documentation, in [the Factual API docs for Geopuls](http://developer.factual.com/display/docs/Places+API+-+Geopulse).
 
-The <tt>flag</tt> function lets you flag a Factual entity as problematic. For example:
+# Reverse Geocoder
+
+Given a latitude and longitude, uses Factual's reverse geocoder to return the nearest valid address.
+
+Example usage:
 
 ````clojure
-(fact/flag "97598010-433f-4946-8fd5-4a6dd1639d77" {:table :places :problem :spam :user "boris_123"})
+(fact/reverse-geocode 34.06021,-118.41828)
 ````
-The first argument is the Factual ID of the entity you wish to flag.
-
-The second argument is a hash-map that specifies the flag, f.
-
-The :problem entry in f is required, and must be one of:
-
-<ul>
-<li>:duplicate
-<li>:inaccurate
-<li>:inappropriate
-<li>:nonexistent
-<li>:spam
-<li>:other
-</ul>
-
-The :user in f is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
-
-f may optionally contain entries for:
-<ul>
-<li>:comment
-<li>:reference
-</ul>
 
 # Handling Bad Responses
 
@@ -384,11 +409,11 @@ Example:
 ````clojure
 ;  (:import [factual.api factual-error])
 (try+
-	(fact/fetch {:table :places :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :BAD :PARAM}})
-	(catch factual-error {code :code message :message opts :opts}
-	  (println "Got bad resp code:" code)
-	  (println "Message:" message)
-	  (println "Opts:" opts)))
+    (fact/fetch {:table :places :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :BAD :PARAM}})
+    (catch factual-error {code :code message :message opts :opts}
+      (println "Got bad resp code:" code)
+      (println "Message:" message)
+      (println "Opts:" opts)))
 ````
 
 # Example Use Case
@@ -397,20 +422,20 @@ Let's create a function that finds Places close to a lat/lng, with "cafe" in the
 
 ````clojure
 (defn nearby-cafes
-	"Returns up to 12 cafes within 5000 meters of the specified location."
-	[lat lon]
-	(fact/fetch {:table :places
+    "Returns up to 12 cafes within 5000 meters of the specified location."
+    [lat lon]
+    (fact/fetch {:table :places
                       :q "cafe"
-	              :filters {:category {:$eq "Food & Beverage"}}
-	              :geo {:$circle {:$center [lat lon]
-	                              :$meters 5000}}
-	              :include_count true
-	              :limit 12}))
+                  :filters {:category {:$eq "Food & Beverage"}}
+                  :geo {:$circle {:$center [lat lon]
+                                  :$meters 5000}}
+                  :include_count true
+                  :limit 12}))
 ````
 
 Using our function to get some cafes:
 
-	> (def cafes (nearby-cafes 34.06018 -118.41835))
+    > (def cafes (nearby-cafes 34.06018 -118.41835))
 
 Let's peek at the metadata:
 
@@ -429,59 +454,59 @@ We got back the full limit of 12 results, and we can see there's a total of 26 c
 That first one, "Aroma Cafe", sounds interesting. Let's see the details:
 
 ````clojure
-	> (clojure.contrib.pprint/pprint (first cafes))
-	{:status "1",
-	 :country "US",
-	 :longitude -118.423421,
-	 :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7",
-	 :name "Aroma Cafe",
-	 :postcode "90064",
-	 :locality "Los Angeles",
-	 :latitude 34.039792,
-	 :region "CA",
-	 :address "2530 Overland Ave",
-	 :website "http://aromacafe-la.com/",
-	 :tel "(310) 836-2919",
-	 :category "Food & Beverage"}
+    > (clojure.contrib.pprint/pprint (first cafes))
+    {:status "1",
+     :country "US",
+     :longitude -118.423421,
+     :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7",
+     :name "Aroma Cafe",
+     :postcode "90064",
+     :locality "Los Angeles",
+     :latitude 34.039792,
+     :region "CA",
+     :address "2530 Overland Ave",
+     :website "http://aromacafe-la.com/",
+     :tel "(310) 836-2919",
+     :category "Food & Beverage"}
 ````
 
 No let's use Crosswalk to fine out what Yelp has to say about this place. Note that we use Aroma Cafe's :factual_id from the above results...
 
 ````clojure
-	> (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7" :only "yelp")
-	({:factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7",
-	  :namespace :yelp,
-	  :namespace_id "AmtMwS2wCbr3l-_S0d9AoQ",
-	  :url "http://www.yelp.com/biz/aroma-cafe-los-angeles"})
+    > (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7" :only "yelp")
+    ({:factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7",
+      :namespace :yelp,
+      :namespace_id "AmtMwS2wCbr3l-_S0d9AoQ",
+      :url "http://www.yelp.com/biz/aroma-cafe-los-angeles"})
 ````
-	  
+
 That gives me the yelp URL for the Aroma Cafe, so I can read up on it on Yelp.com.
 
 Of course, Factual supports other Crosswalked sources besides Yelp. If you look at each row returned by the <tt>crosswalk</tt> function, you'll see there's a <tt>:namespace</tt> in each one. Let's find out what namespaces are available for the Aroma Cafe:
 
 ````clojure
-	> (map :namespace (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7"))
-	(:merchantcircle :urbanspoon :yahoolocal :foursquare :yelp ... )
+    > (map :namespace (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7"))
+    (:merchantcircle :urbanspoon :yahoolocal :foursquare :yelp ... )
 ````
 
 Let's create a function that takes a :factual_id and returns a hashmap of each valid namespace associated with its Crosswalk URL:
 
 ````clojure
 (defn namespaces->urls [factid]
-	(into {} (map #(do {(:namespace %) (:url %)})
-	  (fact/crosswalk :factual_id factid))))
+    (into {} (map #(do {(:namespace %) (:url %)})
+      (fact/crosswalk :factual_id factid))))
 ````
 
 Now we can do this:
 
 ````clojure
-	> (namespaces->urls "eb67e10b-b103-41be-8bb5-e077855b7ae7")
-	{:merchantcircle   "http://www.merchantcircle.com/business/Aroma.Cafe.310-836-2919",
- 	 :urbanspoon	   "http://www.urbanspoon.com/r/5/60984/restaurant/West-Los-Angeles/Bali-Place-LA",
- 	 :yahoolocal       "http://local.yahoo.com/info-20400708-aroma-cafe-los-angeles",
- 	 :foursquare       "https://foursquare.com/venue/46f53d65f964a520f04a1fe3",
- 	 :yelp             "http://www.yelp.com/biz/aroma-cafe-los-angeles",	
-	 ... }
+    > (namespaces->urls "eb67e10b-b103-41be-8bb5-e077855b7ae7")
+    {:merchantcircle   "http://www.merchantcircle.com/business/Aroma.Cafe.310-836-2919",
+     :urbanspoon       "http://www.urbanspoon.com/r/5/60984/restaurant/West-Los-Angeles/Bali-Place-LA",
+     :yahoolocal       "http://local.yahoo.com/info-20400708-aroma-cafe-los-angeles",
+     :foursquare       "https://foursquare.com/venue/46f53d65f964a520f04a1fe3",
+     :yelp             "http://www.yelp.com/biz/aroma-cafe-los-angeles",
+     ... }
 ````
 
 # Debug mode
@@ -501,6 +526,17 @@ You can also wrap <tt>with-debug</tt> around the lower-level <tt>get-results</tt
 ````clojure
 (def data (fact/with-debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))
 ````
+
+# Where to Get Help
+
+If you think you've identified a specific bug in this driver, please file an issue in the github repo. Please be as specific as you can, including:
+
+  * What you did to surface the bug
+  * What you expected to happen
+  * What actually happened
+  * Detailed stack trace and/or line numbers
+
+If you are having any other kind of issue, such as unexpected data or strange behaviour from Factual's API (or you're just not sure WHAT'S going on), please contact us through [GetSatisfaction](http://support.factual.com/factual).
 
 # License
 
