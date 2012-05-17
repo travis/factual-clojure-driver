@@ -71,17 +71,16 @@
     (factual-error. code msg opts)))
 
 (defn debug-resp [resp body]
-  (println "--- factual debug ---")
+  (println "--- response debug ---")
   (let [req (.getRequest resp)
-        gurl (.getUrl req)
         hdrs (into {} (.getHeaders resp))]
-    (println "req url:" (.build gurl))
     (println "resp status code:" (.getStatusCode resp))
     (println "resp status message:" (.getStatusMessage resp))
     (println "resp headers:")
-    (clojure.pprint/pprint hdrs))
-  (println "resp body:")
-  (println body))
+    (clojure.pprint/pprint (into {} hdrs)))
+  (println "resp body:" body)
+  (println body)
+  (println "----------------------"))
 
 (defn get-results
   "Executes the specified request and returns the results.
@@ -98,7 +97,7 @@
   (try
     (let [url (str *base-url* path)
           headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
+          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config* :debug *debug*})
           body (slurp (reader (.getContent resp)))]
       (when *debug* (debug-resp resp body))
       (do-meta (read-json body)))
@@ -235,3 +234,8 @@
 (defn resolved [values]
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
+
+#_(defn geopulse [lat lon]
+  (get-results )
+
+  )
