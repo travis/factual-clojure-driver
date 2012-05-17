@@ -342,10 +342,12 @@ You can run a Geopulse query using the <tt>geopulse</tt> function. You pass it a
 ````
 
 ````clojure
-(geopulse {:geo {:$point [34.06021,-118.41828]} :select \"income,race,age_by_gender\"})
+(geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,race,age_by_gender"})
 ````
 
-You can see a full list of available Factual pulses, as well as full documentation, in [the Factual API docs for Geopuls](http://developer.factual.com/display/docs/Places+API+-+Geopulse).
+Available pulses include commercial_density, commercial_profile, income, race, hispanic, and age_by_gender.
+
+You can see a full list of available Factual pulses and their possible return values, as well as full documentation, in [the Factual API docs for Geopuls](http://developer.factual.com/display/docs/Places+API+-+Geopulse).
 
 
 # Handling Bad Responses
