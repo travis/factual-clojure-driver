@@ -11,7 +11,5 @@
   * Upgraded slingshot to 0.10.2
   * Upgraded data.json to 0.1.2 
   * Added support for Facets
-  * Added support for Contribute
-  * Added support for Flag
   * Added debug mode
 
