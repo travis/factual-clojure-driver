@@ -235,7 +235,18 @@
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
 
-#_(defn geopulse [lat lon]
-  (get-results )
+(defn geopulse
+  "Runs a Geopulse request against Factual and returns the results.
 
-  )
+   q is a hash-map specifying the Geopulse query. It must contain :geo.
+   It can optionally contain :select. If :select is included, it must be a
+   comma delimited list of available Factual pulses, such as \"income\",
+   \"race\", \"age_by_gender\", etc.
+
+   Example usage:
+   (geopulse {:geo {:$point [34.06021,-118.41828]}})
+
+   Example usage:
+   (geopulse {:geo {:$point [34.06021,-118.41828]} :select \"income,race,age_by_gender\"})"
+  [q]
+  (get-results {:path "places/geopulse" :params q}))
