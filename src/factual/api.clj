@@ -250,3 +250,12 @@
    (geopulse {:geo {:$point [34.06021,-118.41828]} :select \"income,race,age_by_gender\"})"
   [q]
   (get-results {:path "places/geopulse" :params q}))
+
+(defn reverse-geocode
+  "Given latitude lat and longitude lon, uses Factual's reverse geocoder to return the
+   nearest valid address.
+
+   Example usage:
+   (reverse-geocode 34.06021,-118.41828)"
+  [lat lon]
+  (get-results {:path "places/geocode" :params {:geo { :$point [lat lon]}}}))

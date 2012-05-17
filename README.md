@@ -237,6 +237,47 @@ The driver supports all available row filtering logic. Examples:
   </tr>
 </table>
 
+# World Geographies
+
+World Geographies contains administrative geographies (states, counties, countries), natural geographies (rivers, oceans, continents), and assorted geographic miscallaney.  This resource is intended to complement Factual's Global Places and add utility to any geo-related content.
+
+Common use cases include:
+
+* Determining all cities within a state or all postal codes in a city
+* Creating a type-ahead placename lookup
+* Validating data against city, state, country and county names
+* A translation table to convert between the search key used by a user, i.e. '慕尼黑' or 'Munich' for the native 'München'
+
+You can use the <tt>fetch</tt> function to query World Geographies, supplying :world-geographies as the table name.
+
+Examples:
+
+````clojure
+; Get all towns surrounding Philadelphia
+(fact/fetch {:table :world-geographies
+             :select "neighbors"
+             :filters {:factual_id {:$eq "08ca0f62-8f76-11e1-848f-cfd5bf3ef515"}}})
+
+````
+
+````clojure
+; Find the town zipcode 95008 belongs to
+(fact/fetch {:table :world-geographies
+             :filters {:children {:$search "091c8d14-8f76-11e1-848f-cfd5bf3ef515"}}})
+
+````
+
+````clojure
+; Searching by placename, placetype, country and geographic hierarchy
+(fact/fetch {:table :world-geographies
+             :filters {:name {:$eq "wayne"}
+                       :country {:$eq :us}
+                       :placetype {:$eq "locality"}
+                       :ancestors {:$search "08666f5c-8f76-11e1-848f-cfd5bf3ef515"}}})
+````
+
+For more details about World Geographies, including schemab, see [the main API docs for World Geographies](http://developer.factual.com/display/docs/World+Geographies).
+
 # Facets
 
 The <tt>facets</tt> function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
@@ -338,17 +379,26 @@ You can run a Geopulse query using the <tt>geopulse</tt> function. You pass it a
  Example usage:
 
  ````clojure
-(geopulse {:geo {:$point [34.06021,-118.41828]}})
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]}})
 ````
 
 ````clojure
-(geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,race,age_by_gender"})
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,race,age_by_gender"})
 ````
 
 Available pulses include commercial_density, commercial_profile, income, race, hispanic, and age_by_gender.
 
 You can see a full list of available Factual pulses and their possible return values, as well as full documentation, in [the Factual API docs for Geopuls](http://developer.factual.com/display/docs/Places+API+-+Geopulse).
 
+# Reverse Geocoder
+
+Given a latitude and longitude, uses Factual's reverse geocoder to return the nearest valid address.
+
+Example usage:
+
+````clojure
+(fact/reverse-geocode 34.06021,-118.41828)
+````
 
 # Handling Bad Responses
 

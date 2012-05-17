@@ -11,5 +11,8 @@
   * Upgraded slingshot to 0.10.2
   * Upgraded data.json to 0.1.2 
   * Added support for Facets
+  * Added support for Geopulse
+  * Added support for Reverse Geocoder
+  * Added docs for using World Geographies table
   * Added debug mode
 
