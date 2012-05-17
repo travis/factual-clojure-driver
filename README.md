@@ -257,14 +257,12 @@ Examples:
 (fact/fetch {:table :world-geographies
              :select "neighbors"
              :filters {:factual_id {:$eq "08ca0f62-8f76-11e1-848f-cfd5bf3ef515"}}})
-
 ````
 
 ````clojure
 ; Find the town zipcode 95008 belongs to
 (fact/fetch {:table :world-geographies
              :filters {:children {:$search "091c8d14-8f76-11e1-848f-cfd5bf3ef515"}}})
-
 ````
 
 ````clojure
@@ -276,7 +274,7 @@ Examples:
                        :ancestors {:$search "08666f5c-8f76-11e1-848f-cfd5bf3ef515"}}})
 ````
 
-For more details about World Geographies, including schemab, see [the main API docs for World Geographies](http://developer.factual.com/display/docs/World+Geographies).
+For more details about World Geographies, including schema, see [the main API docs for World Geographies](http://developer.factual.com/display/docs/World+Geographies).
 
 # Facets
 
