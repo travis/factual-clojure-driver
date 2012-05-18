@@ -58,7 +58,7 @@
 (defmacro with-debug
   [& body]
   `(binding [*debug* true]
-     ~@body))
+     (time ~@body)))
 
 (defn new-error
   "Given an HttpResponseException, returns a factual-error record representing

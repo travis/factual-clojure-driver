@@ -261,8 +261,9 @@ Examples:
 
 ````clojure
 ; Find the town zipcode 95008 belongs to
-(fact/fetch {:table :world-geographies
-             :filters {:children {:$search "091c8d14-8f76-11e1-848f-cfd5bf3ef515"}}})
+(fact/fetch  {:table :world-geographies
+              :filters {:name {:$eq "95008"}
+                        :country {:$eq "us"}}})
 ````
 
 ````clojure
