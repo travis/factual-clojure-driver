@@ -55,7 +55,7 @@
                      (dissoc res :response)
                      {:response (dissoc (:response res) :data)}))))
 
-(defmacro with-debug
+(defmacro debug
   [& body]
   `(binding [*debug* true]
      (time ~@body)))
@@ -94,6 +94,7 @@
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
   [{:keys [method path params content] :or {method :get}}]
+  (when *debug* (println "--- Driver version:" DRIVER_VERSION_TAG))
   (try
     (let [url (str *base-url* path)
           headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
