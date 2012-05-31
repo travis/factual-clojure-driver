@@ -1,12 +1,6 @@
 # About
 
-factual-clojure-driver is the officially supported Clojure driver for Factual's API.
-
-Factual's [web-based API](http://developer.factual.com) offers:
-
-* Rich queries across curated datasets U.S. points of interest, global points of interest, U.S. restaurants with long tail attributes, consumer product goods, and more.
-* Crosswalk: Translation between Factual IDs, third party IDs, and URLs that represent the same entity across the internet.
-* Resolve: An entity resolution API that makes partial records complete, matches one entity against another, and assists in de-duping and normalizing datasets.
+This is the Factual-supported Clojure driver for [Factual's public API](http://developer.factual.com).
 
 # Installation
 
