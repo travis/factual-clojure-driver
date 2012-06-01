@@ -16,6 +16,8 @@ The driver is hosted at [Clojars](http://clojars.org/factual-clojure-driver). Ju
   (fact/factual! "YOUR_FACTUAL_KEY" "YOUR_FACTUAL_SECRET")
 ````
 
+If you don't have a Factual API account yet, [it's free and easy to get one](https://www.factual.com/api-keys/request).
+
 # Fetch
 
 The <tt>fetch</tt> function supports rich read queries. It takes a hash-map as its argument, which specifies the full query. The only required entry is :table, which must be associated with a valid Factual table name. Optional query parameters, such as row filters and geolocation, are specified with further entries in q.
