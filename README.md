@@ -237,6 +237,46 @@ The driver supports all available row filtering logic. Examples:
   </tr>
 </table>
 
+# World Geographies
+
+World Geographies contains administrative geographies (states, counties, countries), natural geographies (rivers, oceans, continents), and assorted geographic miscallaney.  This resource is intended to complement Factual's Global Places and add utility to any geo-related content.
+
+Common use cases include:
+
+* Determining all cities within a state or all postal codes in a city
+* Creating a type-ahead placename lookup
+* Validating data against city, state, country and county names
+* A translation table to convert between the search key used by a user, i.e. '慕尼黑' or 'Munich' for the native 'München'
+
+You can use the <tt>fetch</tt> function to query World Geographies, supplying :world-geographies as the table name.
+
+Examples:
+
+````clojure
+; Get all towns surrounding Philadelphia
+(fact/fetch {:table :world-geographies
+             :select "neighbors"
+             :filters {:factual_id {:$eq "08ca0f62-8f76-11e1-848f-cfd5bf3ef515"}}})
+````
+
+````clojure
+; Find the town zipcode 95008 belongs to
+(fact/fetch  {:table :world-geographies
+              :filters {:name {:$eq "95008"}
+                        :country {:$eq "us"}}})
+````
+
+````clojure
+; Searching by placename, placetype, country and geographic hierarchy
+(fact/fetch {:table :world-geographies
+             :filters {:name {:$eq "wayne"}
+                       :country {:$eq :us}
+                       :placetype {:$eq "locality"}
+                       :ancestors {:$search "08666f5c-8f76-11e1-848f-cfd5bf3ef515"}}})
+````
+
+For more details about World Geographies, including schema, see [the main API docs for World Geographies](http://developer.factual.com/display/docs/World+Geographies).
+
 # Facets
 
 The <tt>facets</tt> function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
@@ -268,29 +308,34 @@ See the docs on <tt>facets</tt> for more details.
 
 # Crosswalk
 
-The <tt>crosswalk</tt> function provides a translation between Factual IDs, third party IDs, and URLs that represent the same entity across the internet.
+Crosswalk provides a translation between Factual IDs, third party IDs, and URLs that represent the same entity across the internet. You use Crosswalk as a table called 'crosswalk'.
 
 Examples:
 
-````clojure
-;; Return all Crosswalk data for the place identified by the specified Factual ID
-(fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77")
-````
+```clojure
+;; Lookup the Yelp Crosswalk entry for The Stand, using on its Yelp page
+(fact/fetch {:table :crosswalk :filters {:url "http://www.yelp.com/biz/the-stand-los-angeles-5"}})
+```
 
-````clojure
-;; Return Loopt.com Crosswalk data for the place identified by the specified Factual ID
-(fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :only "loopt")
-````
+```clojure
+;; Lookup The Stand's Crosswalk entry using its Foursquare ID
+(fact/fetch {:table :crosswalk :filters {:namespace :foursquare :namespace_id "4a651cb1f964a52052c71fe3"}})
+```
 
-````clojure
-;; Return all Crosswalk data for the place identified by the specified Foursquare ID
-(fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3")
-````
+```clojure
+;; Find all Crosswalk entries that Factual has for The Stand
+(fact/fetch {:table :crosswalk :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881"}})
+```
 
-````clojure
-;; Return the Yelp.com Crosswalk data for the place identified by a Foursquare ID:
-(fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3" :only "yelp")
-````
+```clojure
+;; Find the OpenMenu Crosswalk entry for The Stand, by Factual ID
+(fact/fetch {:table :crosswalk :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881" :namespace :openmenu}})
+```
+
+```clojure
+;; Search for all Yelp Crosswalk entries for The Container Store
+(fact/fetch {:table :crosswalk :q "the container store" :filters {:namespace :yelp}})
+```
 
 # Resolve
 
@@ -331,15 +376,15 @@ You can get the schema for a specific table like this:
 
 The <tt>submit</tt> function lets you submit new or corrected data to Factual. Examples:
 
-````clojure
+```clojure
 ; Submit a new entity to Factual's U.S. Restaurants table
 (fact/submit {:table :places :user "boris123" :values {:name "A New Restaurant" :locality "Los Angeles"}})
-````
+```
 
-````clojure
+```clojure
 ; Submit a correction to an existing entity in Factual's U.S. Restaurants table
 (fact/submit {:table :places :user "boris123" :values {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :name "New Name"}})
-````
+```
 
 The :user parameter is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
 
@@ -347,9 +392,9 @@ The :user parameter is required, and specifies the identity of the end user that
 
 The <tt>flag</tt> function lets you flag a Factual entity as problematic. For example:
 
-````clojure
+```clojure
 (fact/flag "97598010-433f-4946-8fd5-4a6dd1639d77" {:table :places :problem :spam :user "boris_123"})
-````
+```
 The first argument is the Factual ID of the entity you wish to flag.
 
 The second argument is a hash-map that specifies the flag, f.
@@ -373,6 +418,37 @@ f may optionally contain entries for:
 <li>:reference
 </ul>
 
+# Geopulse
+
+Factual Geopulse provides point-based access to geographic attributes: you provide a long/lat coordinate pair, Factual provides everything it knows about that geography.
+
+The Geopulse API is made up of several "pulses".  Pulses are georeferenced attributes generated by Factual, sourced from openly available content (such as the US Census), or provided to Factual by proprietary third-parties.
+
+You can run a Geopulse query using the <tt>geopulse</tt> function. You pass it a hash-map specifying the query parameters. It must contain <tt>:geo</tt>. It can optionally contain <tt>:select</tt>. If <tt>:select</tt> is included, it must be a comma delimited list of available Factual pulses.
+
+ Example usage:
+
+ ````clojure
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]}})
+````
+
+````clojure
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,race,age_by_gender"})
+````
+
+Available pulses include commercial_density, commercial_profile, income, race, hispanic, and age_by_gender.
+
+You can see a full list of available Factual pulses and their possible return values, as well as full documentation, in [the Factual API docs for Geopuls](http://developer.factual.com/display/docs/Places+API+-+Geopulse).
+
+# Reverse Geocoder
+
+Given a latitude and longitude, uses Factual's reverse geocoder to return the nearest valid address.
+
+Example usage:
+
+````clojure
+(fact/reverse-geocode 34.06021,-118.41828)
+````
 # Handling Bad Responses
 
 The driver uses Slingshot to indicate API errors. If an API error is encountered, a Slingshot stone called factual-error will be thrown.
@@ -484,8 +560,6 @@ Now we can do this:
      ... }
 ````
 
-
-
 # Debug mode
 
 This driver and the Factual service should always work perfectly, all the time. But in the highly unlikely, almost impossible event that things go wrong, there is a debug mode that will help with troubleshooting.
@@ -503,6 +577,17 @@ You can also wrap <tt>with-debug</tt> around the lower-level <tt>get-results</tt
 ````clojure
 (def data (fact/with-debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))
 ````
+
+# Where to Get Help
+
+If you think you've identified a specific bug in this driver, please file an issue in the github repo. Please be as specific as you can, including:
+
+  * What you did to surface the bug
+  * What you expected to happen
+  * What actually happened
+  * Detailed stack trace and/or line numbers
+
+If you are having any other kind of issue, such as unexpected data or strange behaviour from Factual's API (or you're just not sure WHAT'S going on), please contact us through [GetSatisfaction](http://support.factual.com/factual).
 
 # License
 

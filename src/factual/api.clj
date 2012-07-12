@@ -58,7 +58,7 @@
 (defmacro with-debug
   [& body]
   `(binding [*debug* true]
-     ~@body))
+     (time ~@body)))
 
 (defn new-error
   "Given an HttpResponseException, returns a factual-error record representing
@@ -71,17 +71,16 @@
     (factual-error. code msg opts)))
 
 (defn debug-resp [resp body]
-  (println "--- factual debug ---")
+  (println "--- response debug ---")
   (let [req (.getRequest resp)
-        gurl (.getUrl req)
         hdrs (into {} (.getHeaders resp))]
-    (println "req url:" (.build gurl))
     (println "resp status code:" (.getStatusCode resp))
     (println "resp status message:" (.getStatusMessage resp))
     (println "resp headers:")
-    (clojure.pprint/pprint hdrs))
-  (println "resp body:")
-  (println body))
+    (clojure.pprint/pprint (into {} hdrs)))
+  (println "resp body:" body)
+  (println body)
+  (println "----------------------"))
 
 (defn get-results
   "Executes the specified request and returns the results.
@@ -98,7 +97,7 @@
   (try
     (let [url (str *base-url* path)
           headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config*})
+          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config* :debug *debug*})
           body (slurp (reader (.getContent resp)))]
       (when *debug* (debug-resp resp body))
       (do-meta (read-json body)))
@@ -225,10 +224,6 @@
   [table]
   (get-results {:path (str "t/" (name table) "/schema")}))
 
-(defn crosswalk [& {:as opts}]
-  (map #(update-in % [:namespace] keyword)
-       (get-results {:path "places/crosswalk" :params opts})))
-
 (defn resolve [values]
   (get-results {:path "places/resolve" :params {:values values}}))
 
@@ -264,3 +259,28 @@
   (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
         content (select-keys f [:problem :user :comment :reference])]
     (get-results {:path path :method :post :content content})))
+
+(defn geopulse
+  "Runs a Geopulse request against Factual and returns the results.
+
+   q is a hash-map specifying the Geopulse query. It must contain :geo.
+   It can optionally contain :select. If :select is included, it must be a
+   comma delimited list of available Factual pulses, such as \"income\",
+   \"race\", \"age_by_gender\", etc.
+
+   Example usage:
+   (geopulse {:geo {:$point [34.06021,-118.41828]}})
+
+   Example usage:
+   (geopulse {:geo {:$point [34.06021,-118.41828]} :select \"income,race,age_by_gender\"})"
+  [q]
+  (get-results {:path "places/geopulse" :params q}))
+
+(defn reverse-geocode
+  "Given latitude lat and longitude lon, uses Factual's reverse geocoder to return the
+   nearest valid address.
+
+   Example usage:
+   (reverse-geocode 34.06021,-118.41828)"
+  [lat lon]
+  (get-results {:path "places/geocode" :params {:geo { :$point [lat lon]}}}))
