@@ -308,29 +308,34 @@ See the docs on <tt>facets</tt> for more details.
 
 # Crosswalk
 
-The <tt>crosswalk</tt> function provides a translation between Factual IDs, third party IDs, and URLs that represent the same entity across the internet.
+Crosswalk provides a translation between Factual IDs, third party IDs, and URLs that represent the same entity across the internet. You use Crosswalk as a table called 'crosswalk'.
 
 Examples:
 
-````clojure
-;; Return all Crosswalk data for the place identified by the specified Factual ID
-(fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77")
-````
+```clojure
+;; Lookup the Yelp Crosswalk entry for The Stand, using on its Yelp page
+(fact/fetch {:table :crosswalk :filters {:url "http://www.yelp.com/biz/the-stand-los-angeles-5"}})
+```
 
-````clojure
-;; Return Loopt.com Crosswalk data for the place identified by the specified Factual ID
-(fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77" :only "loopt")
-````
+```clojure
+;; Lookup The Stand's Crosswalk entry using its Foursquare ID
+(fact/fetch {:table :crosswalk :filters {:namespace :foursquare :namespace_id "4a651cb1f964a52052c71fe3"}})
+```
 
-````clojure
-;; Return all Crosswalk data for the place identified by the specified Foursquare ID
-(fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3")
-````
+```clojure
+;; Find all Crosswalk entries that Factual has for The Stand
+(fact/fetch {:table :crosswalk :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881"}})
+```
 
-````clojure
-;; Return the Yelp.com Crosswalk data for the place identified by a Foursquare ID:
-(fact/crosswalk :namespace "foursquare" :namespace_id "4ae4df6df964a520019f21e3" :only "yelp")
-````
+```clojure
+;; Find the OpenMenu Crosswalk entry for The Stand, by Factual ID
+(fact/fetch {:table :crosswalk :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881" :namespace :openmenu}})
+```
+
+```clojure
+;; Search for all Yelp Crosswalk entries for The Container Store
+(fact/fetch {:table :crosswalk :q "the container store" :filters {:namespace :yelp}})
+```
 
 # Resolve
 

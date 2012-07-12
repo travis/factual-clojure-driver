@@ -224,10 +224,6 @@
   [table]
   (get-results {:path (str "t/" (name table) "/schema")}))
 
-(defn crosswalk [& {:as opts}]
-  (map #(update-in % [:namespace] keyword)
-       (get-results {:path "places/crosswalk" :params opts})))
-
 (defn resolve [values]
   (get-results {:path "places/resolve" :params {:values values}}))
 
