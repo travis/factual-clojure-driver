@@ -284,3 +284,17 @@
    (reverse-geocode 34.06021,-118.41828)"
   [lat lon]
   (get-results {:path "places/geocode" :params {:geo { :$point [lat lon]}}}))
+
+(defn monetize
+  "Runs a Monetize request against Factual and returns the results.
+
+   Params should be a hash-map holding your query parameters, such as:
+     :q for full text search,
+     :fitlers for row filters,
+     :geo for a geo filter,
+     etc.
+
+   Example usage:
+   (monetize {:q \"Fried Chicken, Los Angeles\"})"
+  [params]
+  (get-results {:path "places/monetize" :params params}))

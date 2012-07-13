@@ -14,5 +14,3 @@
   "Returns 3 random records from Factual's Places dataset"
   []
   (fact/fetch :places {:limit 3}))
-
-

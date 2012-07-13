@@ -337,6 +337,8 @@ Examples:
 (fact/fetch {:table :crosswalk :q "the container store" :filters {:namespace :yelp}})
 ```
 
+More details on Crosswalk can be found in (our general API documentation for Crosswalk)[http://developer.factual.com/display/docs/Places+API+-+Crosswalk].
+
 # Resolve
 
 Resolve provides an entity resolution API that makes partial records complete, matches one entity against another, and assists in de-duping and normalizing datasets.
@@ -449,6 +451,52 @@ Example usage:
 ````clojure
 (fact/reverse-geocode 34.06021,-118.41828)
 ````
+
+# Monetize
+
+The Monetize API enables you to access offers that Factual has aggregated from various third party offer originators  and earn money based on conversions.  The way it works is Factual snaps offers to Factual Places.  These offers and related places are exposed in the Monetize API, which is accessible through the same API structure as Factual's Core API.
+
+As your users convert (i.e. purchase a deal, order from an online menu), Factual will relay to you a healthy commission from the third party offer originators.  To be clear, such payment is based on the actual conversions driven by a given developer.
+
+Examples:
+
+```clojure
+;; Full-text search
+(fact/monetize {:q \"Fried Chicken, Los Angeles\"})
+```
+
+```clojure
+;; Row Filter on a given city (place locality)
+(fact/monetize {:filters {:place_locality :Philadelphia}})
+```
+
+```clojure
+;; Geo Filter
+(fact/monetize {:geo {:$circle {:$center [34.06018,-118.41835]
+                                :$meters 5000}}})
+```
+
+```clojure
+;; Geo Filter Limited to Groupon deals
+(fact/monetize {:geo {:$circle {:$center [34.06018,-118.41835]
+                                :$meters 5000}}
+                :filters {:source_namespace {:$eq :groupon}}})
+```
+
+```clojure
+;; Row Filter on a given city and Yelp
+(fact/monetize {:filters {:$and [{:place_locality {:$eq :Boston}}
+                                 {:source_namespace {:$eq :yelp}}]}})
+```
+
+```clojure
+;; Row Filter on a given city and exclude Yelp
+(fact/monetize {:filters {:$and [{:place_locality {:$eq :Boston}}
+                                 {:source_namespace {:$neq :yelp}}]}})
+```
+
+For more details on Monetize, including schema, see [the main API docs](http://developer.factual.com/display/docs/Places+API+-+Monetize)
+
 # Handling Bad Responses
 
 The driver uses Slingshot to indicate API errors. If an API error is encountered, a Slingshot stone called factual-error will be thrown.

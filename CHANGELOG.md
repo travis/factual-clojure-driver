@@ -1,6 +1,7 @@
 ## 1.4.0
 
   * Removed first class Crosswalk (use it as a table instead)
+  * Added support for Monetize
 
 ## 1.3.1
 
