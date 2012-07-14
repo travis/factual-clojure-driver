@@ -612,18 +612,18 @@ Now we can do this:
 
 This driver and the Factual service should always work perfectly, all the time. But in the highly unlikely, almost impossible event that things go wrong, there is a debug mode that will help with troubleshooting.
 
-If you wrap your call(s) with the <tt>with-debug</tt> macro, verbose debug information will be sent to stdout. This will provide details about the request sent to Factual and the response that was returned.
+If you wrap your call(s) with the <tt>debug</tt> macro, verbose debug information will be sent to stdout. This will provide details about the request sent to Factual and the response that was returned.
 
-Example use of the <tt>with-debug</tt> macro:
+Example use of the <tt>debug</tt> macro:
 
 ````clojure
-(def data (fact/with-debug (fact/fetch {:table :places :q "starbucks" :limit 3})))
+(def data (fact/debug (fact/fetch {:table :places :q "starbucks" :limit 3})))
 ````
 
-You can also wrap <tt>with-debug</tt> around the lower-level <tt>get-results</tt> function, like so:
+You can also wrap <tt>debug</tt> around the lower-level <tt>get-results</tt> function, like so:
 
 ````clojure
-(def data (fact/with-debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))
+(def data (fact/debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))
 ````
 
 # Where to Get Help

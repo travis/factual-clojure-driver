@@ -2,6 +2,7 @@
 
   * Removed first class Crosswalk (use it as a table instead)
   * Added support for Monetize
+  * Renamed with-debug to debug
 
 ## 1.3.1
 
