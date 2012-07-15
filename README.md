@@ -612,17 +612,6 @@ If you wrap your call(s) with the <tt>debug</tt> macro, verbose debug informatio
 
 Example use of the <tt>debug</tt> macro:
 
-<<<<<<< HEAD
-````clojure
-(def data (fact/debug (fact/fetch {:table :places :q "starbucks" :limit 3})))
-````
-
-You can also wrap <tt>debug</tt> around the lower-level <tt>get-results</tt> function, like so:
-
-````clojure
-(def data (fact/debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))
-````
-=======
 ```clojure
 (def data (fact/debug (fact/fetch {:table :places :q "starbucks" :limit 3})))
 ```
@@ -632,7 +621,6 @@ You can also wrap <tt>debug</tt> around the lower-level <tt>get-results</tt> fun
 ```clojure
 (def data (fact/debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))
 ```
->>>>>>> release/v1.4.0
 
 # Where to Get Help
 
