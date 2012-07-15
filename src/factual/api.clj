@@ -225,16 +225,41 @@
   [table]
   (get-results {:path (str "t/" (name table) "/schema")}))
 
-(defn crosswalk [& {:as opts}]
-  (map #(update-in % [:namespace] keyword)
-       (get-results {:path "places/crosswalk" :params opts})))
-
 (defn resolve [values]
   (get-results {:path "places/resolve" :params {:values values}}))
 
 (defn resolved [values]
   (first (filter :resolved
                  (get-results {:path "places/resolve" :params {:values values}}))))
+
+(defn submit
+  ([id s]
+     {:pre [(:table s) (:values s) (:user s)]}
+     (let [path (if id
+                  (str "t/" (name (:table s)) "/" (name id) "/submit")
+                  (str "t/" (name (:table s)) "/submit"))
+           params {:user (:user s)}]
+       (get-results {:path path :method :post :params params :content (:values s)})))
+  ([s]
+     (submit nil s)))
+
+(defn flag
+  "Flags a specified entity as problematic.
+
+   id is the Factual ID for the entity to flag.
+
+   f must be a hash-map containing:
+     :table :problem :user
+   f may optionally contain
+     :comment :reference
+
+   :problem must be one of:
+     :duplicate, :inaccurate, :inappropriate, :nonexistent, :spam, :other"
+  [id f]
+  {:pre [(:table f) (:problem f) (:user f)]}
+  (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
+        content (select-keys f [:problem :user :comment :reference])]
+    (get-results {:path path :method :post :content content})))
 
 (defn geopulse
   "Runs a Geopulse request against Factual and returns the results.
@@ -260,3 +285,17 @@
    (reverse-geocode 34.06021,-118.41828)"
   [lat lon]
   (get-results {:path "places/geocode" :params {:geo { :$point [lat lon]}}}))
+
+(defn monetize
+  "Runs a Monetize request against Factual and returns the results.
+
+   Params should be a hash-map holding your query parameters, such as:
+     :q for full text search,
+     :fitlers for row filters,
+     :geo for a geo filter,
+     etc.
+
+   Example usage:
+   (monetize {:q \"Fried Chicken, Los Angeles\"})"
+  [params]
+  (get-results {:path "places/monetize" :params params}))
