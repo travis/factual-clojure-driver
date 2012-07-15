@@ -12,7 +12,7 @@ Factual's [web-based API](http://developer.factual.com) offers:
 
 The driver is hosted at [Clojars](http://clojars.org/factual-clojure-driver). Just add this to your dependencies:
 
-    [factual-clojure-driver "1.3.1"]
+    [factual-clojure-driver "1.4.0"]
 
 # Setup
 
