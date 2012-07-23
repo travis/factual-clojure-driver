@@ -55,7 +55,7 @@
                      (dissoc res :response)
                      {:response (dissoc (:response res) :data)}))))
 
-(defmacro with-debug
+(defmacro debug
   [& body]
   `(binding [*debug* true]
      (time ~@body)))
