@@ -49,10 +49,22 @@
 
 (deftest test-resolve
   (let [res (first
-             (fact/resolve {:name "taco" :region "CA" :locality "los angeles"
+             (fact/resolve {:name "taco"
                            :address "10250 santa monica"}))]
     (is (= true (:resolved res)))))
 
 (deftest test-crosswalk
   (is (< 3 (count
-             (fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77")))))
+             (fact/fetch {:table :crosswalk :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77"}})))))
+
+
+(deftest test-multi
+  (let [res (fact/multi {:query1 {:api fact/fetch* :table :global :q "cafe" :limit 10}
+                         :query2 {:api fact/facets* :table :global :select "locality,region" :q "starbucks"}})]
+    (is (not (empty? (get-in res [:query2 :locality]))))
+    (is (= 10 (count (:query1 res))))))
+
+;;diff backend broken
+#_(deftest test-diff
+  (let [res (fact/diff "global" 1318890505254 1318890516892)]))
+
