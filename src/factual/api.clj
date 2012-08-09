@@ -247,15 +247,16 @@
   {:path (str "t/" view "/diffs") :params {:start-date begin :end-date end}})
 
 (defn diff [view begin end]
+  "diff accepts a view name, a beginning timestamp in milliseconds since the epoch,
+   an end timestamp, and returns the changes to the view during that time
+   Ex. (diff \"places-us\" 1318890505254 1318890516892)" 
   (get-results (diff* view begin end)))
 
 (defn generate-multi-url [map]
   {:pre [(:api map)]}
   (let [f (:api map)
         req-map (f (dissoc map :api))
-        ;;url-decode is required below or else the params would be double encoded.
-        ;;once when generating the sub-query, and once when forming the multi query
-        url-params (url-decode (generate-query-string (:params req-map)))]
+        url-params (generate-query-string (:params req-map))]
     (str "/" (:path req-map) (when-not (empty? url-params) "?") url-params)))
 
 (defn multi [map]
@@ -263,10 +264,10 @@
    and the values are hash-maps containing URL parameter pairs.
    Required entry within the value hash-map:
      :api  The value is a function generating a request map. Examples include fetch*, schema*, etc.
-
+     Any other keys required for your specific api
    Example usage:
      (multi {:query1 {:api fetch* :table :global :q \"cafe\" :limit 10}
-             :query2 {:api facets* :table :global :select \"locality,region\" :q \"starbucks\"}})"
+             :query2 {:api facets* :table :global :select \"locality,region\" :q \"http://www.starbucks.com\"}})"
 
   (let [queries  (into {} (for [[k v] map] [k (generate-multi-url v)]))]
     (get-results {:method :get :path "multi" :params {:queries (json-str queries)} })))

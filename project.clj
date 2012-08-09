@@ -7,5 +7,6 @@
     [org.clojure/data.json "0.1.2"]
     [slingshot "0.10.2"]
     [oauth-clj "0.0.5"]
-    [clj-http "0.5.2"]]
+    [clj-http "0.5.2"]] ;oauth-clj has dependency on clj-http as well, but the debug feature for
+                        ;that version didn't work
   :dev-dependencies [[lein-clojars "0.6.0"]])

@@ -60,7 +60,7 @@
 
 (deftest test-multi
   (let [res (fact/multi {:query1 {:api fact/fetch* :table :global :q "cafe" :limit 10}
-                         :query2 {:api fact/facets* :table :global :select "locality,region" :q "starbucks"}})]
+                         :query2 {:api fact/facets* :table :global :select "locality,region" :q "http://www.starbucks.com"}})]
     (is (not (empty? (get-in res [:query2 :locality]))))
     (is (= 10 (count (:query1 res))))))
 
