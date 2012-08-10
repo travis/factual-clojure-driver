@@ -51,7 +51,9 @@
                ;; standard result set
                (get-in res [:response :data])
                ;; schema result
-               (get-in res [:response :view :fields]))]
+               (get-in res [:response :view :fields])
+               ;; submit result
+               (get-in res [:response]))]
     (with-meta data (merge
                      (dissoc res :response)
                      {:response (dissoc (:response res) :data)}))))
@@ -85,6 +87,11 @@
     (println resp)
     (println "----------------------")))
 
+(defn debug-req [req]
+  (println "request parameters:")
+  (clojure.pprint/pprint (:params req))
+  (println "body form parameters:")
+  (clojure.pprint/pprint (:content req)))
 
 (defn get-results
   "Executes the specified request and returns the results.
@@ -97,10 +104,11 @@
    In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
-  [{:keys [method path params content] :or {method :get}}]
+  [{:keys [method path params content] :or {method :get} :as req}]
+  (when *debug* (debug-req req))
   (let [url (str *base-url* path)
         headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-        resp (*consumer* {:method method :url url :headers headers :query-params (json-params params) :content content :as :json :throw-exceptions false :save-request? true :debug *debug* :debug-body *debug*})
+        resp (*consumer* {:method method :url url :headers headers :query-params (if params (json-params params) nil) :body (if content (generate-query-string (json-params content)) nil) :as :json :throw-exceptions false :save-request? true :debug *debug* :debug-body *debug*})
         status (:status (meta resp))]
     (when *debug* (debug-resp resp))
     (if (and (not (nil? status)) (== 200 status))
@@ -243,32 +251,51 @@
   (first (filter :resolved
                  (resolve values))))
 
-(defn diff* [view begin end]
-  {:path (str "t/" view "/diffs") :params {:start-date begin :end-date end}})
+(defn diff*
+  ([values]
+     {:pre [(:table values) (:start values) (:end values)]}
+     {:path (str "t/" (:table values) "/diffs") :params (dissoc values :table)})
+  ([table values]
+     (diff* (assoc values :table table))))
 
-(defn diff [view begin end]
-  "diff accepts a view name, a beginning timestamp in milliseconds since the epoch,
-   an end timestamp, and returns the changes to the view during that time
-   Ex. (diff \"places-us\" 1318890505254 1318890516892)" 
-  (get-results (diff* view begin end)))
+(defn diff
+  "diff is used to view changes to a table during a given time range
+
+   There are two variations.
+   Variation 1: [values]
+   Values is a map containing a value for :table, :start, and :end.
+   The start and end dates are epoch timestamps in milliseconds.
+
+   Variation 2: [table values]
+   The two arguments are the name of the table to obtain diffs for and a map
+   containing a :start and :end, which are epoch timestamps in ms.
+
+   Ex. (diff {:table \"places-us\" :start 1318890505254
+              :end 1318890516892})
+       (diff \"places-us\" {:start 1318890505254 :end 1318890516892})"
+  ([values]
+     (get-results (diff* values)))
+  ([table values]
+     (get-results (diff* table values))))
 
 (defn generate-multi-url [map]
-  {:pre [(:api map)]}
+  {:pre [(:api map) (:args map)]}
   (let [f (:api map)
-        req-map (f (dissoc map :api))
-        url-params (generate-query-string (:params req-map))]
+        req-map (apply f (:args map))
+        url-params (generate-query-string  (json-params (:params req-map)))]
     (str "/" (:path req-map) (when-not (empty? url-params) "?") url-params)))
 
-(defn multi [map]
+(defn multi
   "map is a hash-map specifying the full queries. The keys are the names of the queries,
    and the values are hash-maps containing URL parameter pairs.
    Required entry within the value hash-map:
      :api  The value is a function generating a request map. Examples include fetch*, schema*, etc.
      Any other keys required for your specific api
    Example usage:
-     (multi {:query1 {:api fetch* :table :global :q \"cafe\" :limit 10}
-             :query2 {:api facets* :table :global :select \"locality,region\" :q \"http://www.starbucks.com\"}})"
-
+     (multi {:query1 {:api fetch* :args [{:table :global :q \"cafe\" :limit 10}]}
+             :query2 {:api facets* :args [{:table :global :select \"locality,region\" :q \"http://www.starbucks.com\"}]}
+             :query3 {:api reverse-geocode* :args [34.06021 -118.41828]}})"
+  [map]
   (let [queries  (into {} (for [[k v] map] [k (generate-multi-url v)]))]
     (get-results {:method :get :path "multi" :params {:queries (json-str queries)} })))
 
@@ -280,7 +307,7 @@
                   (str "t/" (name (:table s)) "/" (name id) "/submit")
                   (str "t/" (name (:table s)) "/submit"))
            params {:user (:user s)}]
-       {:path path :method :post :params params :content (:values s)}))
+       {:path path :method :post :params params :content {:values (:values s)}}))
   ([s]
      (submit* nil s)))
 
@@ -293,7 +320,7 @@
   {:pre [(:table f) (:problem f) (:user f)]}
   (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
         content (select-keys f [:problem :user :comment :reference])]
-    (get-results {:path path :method :post :content content})))
+    {:path path :method :post :content content}))
 
 (defn flag
   "Flags a specified entity as problematic.
