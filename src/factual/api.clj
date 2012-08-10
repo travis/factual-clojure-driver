@@ -287,10 +287,10 @@
 
 (defn multi
   "map is a hash-map specifying the full queries. The keys are the names of the queries,
-   and the values are hash-maps containing URL parameter pairs.
+   and the values are hash-maps containing the api and args.
    Required entry within the value hash-map:
-     :api  The value is a function generating a request map. Examples include fetch*, schema*, etc.
-     Any other keys required for your specific api
+     :api  Any one of the apis in the driver with an asterisk suffix. These will prepare a request instead of sending off the request. Examples include fetch*, schema*, etc.
+     :args An array of the parameters normally passed to your specific api call
    Example usage:
      (multi {:query1 {:api fetch* :args [{:table :global :q \"cafe\" :limit 10}]}
              :query2 {:api facets* :args [{:table :global :select \"locality,region\" :q \"http://www.starbucks.com\"}]}

@@ -498,55 +498,36 @@ Examples:
 
 For more details on Monetize, including schema, see [the main API docs](http://developer.factual.com/display/docs/Places+API+-+Monetize)
 
-# Flag
-
-Use flag to mark entries as erroneous.
-
-Example:
-
-```clojure
-;; Flag nonexistent restaurant by its factual id
-(fact/flag "74ce3ae9-7ae1-4141-9752-1cac3305b797" {:table "restaurants-us" :problem "nonexistent" :user "user123")
-```
-
-For more details on Flag, see [the main API docs](http://developer.factual.com/display/docs/Core+API+-+Flag)
-
-# Submit
-
-Use submit to contribute data to a table.
-
-Example:
-
-```clojure
-;; Add entry for new restaurant in LA
-(fact/submit {:table "restaurants-us" :user "user123" :values {:name "A New Restaurant" :locality "Los Angeles"}})
-```
-
-For more details on Submit, see [the main API docs](http://developer.factual.com/display/docs/Core+API+-+Submit)
-
 # Diff
 NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
+
 Diff is most useful for users who download Factual's dataset and use it locally.  Diff allows the user to view changes to a table between given times.  Presumably, the user will use it to see any changes to Factual's data since the last download.  The beginning and end times are represented as epoch timestamps in milliseconds.
 
 Example:
 
 ```clojure
-;; (fact/diff {:table "global" :start 1318890505254 :end 1318890516892})
-;; (fact/diff "global" {:start 1318890505254 :end 1318890516892})
+ (fact/diff {:table "global" :start 1318890505254 :end 1318890516892})
+ (fact/diff "global" {:start 1318890505254 :end 1318890516892})
 ```
 
 For more details on Diffs, see [the main API docs](http://developer.factual.com/display/docs/Core+API+-+Diffs)
 
 # Multi
 
-Multi provides a means to issue multiple api calls with one http request.
+Multi provides a means to issue multiple api calls with one http request. The argument is a hash-map specifying the full queries. The keys are the names of the queries, and the values are hash-maps containing the api and args.
+
+Required entry within the value hash-map:
+<ul>
+<li>:api  Any one of the apis in the driver with an asterisk suffix. These will prepare a request instead of sending off the request. Examples include fetch*, schema*, etc.
+<li>:args An array of the parameters normally passed to your specific api call
+</ul>
 
 Example:
 
 ```clojure
-;; (fact/multi {:query1 {:api fact/fetch* :args [{:table :global :q "cafe" :limit 10}]}
-                :query2 {:api fact/facets* :args [{:table :global :select "locality,region" :q "http://www.starbucks.com"}]}
-                :query3 {:api fact/reverse-geocode* :args [34.06021 -118.41828]}})
+ (fact/multi {:query1 {:api fact/fetch* :args [{:table :global :q "cafe" :limit 10}]}
+              :query2 {:api fact/facets* :args [{:table :global :select "locality,region" :q "http://www.starbucks.com"}]}
+              :query3 {:api fact/reverse-geocode* :args [34.06021 -118.41828]}})
 
 ```
 
