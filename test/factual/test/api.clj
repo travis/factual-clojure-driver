@@ -49,10 +49,34 @@
 
 (deftest test-resolve
   (let [res (first
-             (fact/resolve {:name "taco" :region "CA" :locality "los angeles"
+             (fact/resolve {:name "taco"
                            :address "10250 santa monica"}))]
     (is (= true (:resolved res)))))
 
 (deftest test-crosswalk
   (is (< 3 (count
-             (fact/crosswalk :factual_id "97598010-433f-4946-8fd5-4a6dd1639d77")))))
+             (fact/fetch {:table :crosswalk :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77"}})))))
+
+
+(deftest test-multi
+  (let [res (fact/multi {:query1 {:api fact/fetch* :args [{:table :global :q "cafe" :limit 10}]}
+                         :query2 {:api fact/facets* :args [{:table :global :select "locality,region" :q "http://www.starbucks.com"}]}
+                         :query3 {:api fact/reverse-geocode* :args [34.06021 -118.41828]}})]
+    (is (not (empty? (get-in res [:query2 :locality]))))
+    (is (= 10 (count (:query1 res))))
+    (is (.equals (get-in res [:query3 0 :address]) "1801 Avenue Of The Stars"))))
+
+;;diff backend broken
+#_(deftest test-diff
+    (let [res (fact/diff {:table :global :start 1318890505254 :end 1318890516892})]))
+
+(deftest test-submit
+  (let [res (fact/submit {:table "t7RSEV" :user "test_user" :values {:name "A New Restaurant" :locality "Los Angeles"}})]
+    (is (not
+         (or (nil? (get res :factual_id))
+             (nil? (get res :new_entity)))))))
+
+;;flag backend broken
+#_(deftest test-flag
+    (let [res (fact/flag "74ce3ae9-7ae1-4141-9752-1cac3305b797" {:table "restaurants-us" :problem "nonexistent" :user "test_user"})]
+      ...))

@@ -371,6 +371,7 @@ You can get the schema for a specific table like this:
 ```
 
 # Submit
+NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
 
 The <tt>submit</tt> function lets you submit new or corrected data to Factual. Examples:
 
@@ -387,7 +388,7 @@ The <tt>submit</tt> function lets you submit new or corrected data to Factual. E
 The :user parameter is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
 
 # Flag
-
+NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
 The <tt>flag</tt> function lets you flag a Factual entity as problematic. For example:
 
 ```clojure
@@ -492,6 +493,41 @@ Examples:
 ```
 
 For more details on Monetize, including schema, see [the main API docs](http://developer.factual.com/display/docs/Places+API+-+Monetize)
+
+# Diff
+NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
+
+Diff is most useful for users who download Factual's dataset and use it locally.  Diff allows the user to view changes to a table between given times.  Presumably, the user will use it to see any changes to Factual's data since the last download.  The beginning and end times are represented as epoch timestamps in milliseconds.
+
+Example:
+
+```clojure
+ (fact/diff {:table "global" :start 1318890505254 :end 1318890516892})
+ (fact/diff "global" {:start 1318890505254 :end 1318890516892})
+```
+
+For more details on Diffs, see [the main API docs](http://developer.factual.com/display/docs/Core+API+-+Diffs)
+
+# Multi
+
+Multi provides a means to issue multiple api calls with one http request. The argument is a hash-map specifying the full queries. The keys are the names of the queries, and the values are hash-maps containing the api and args.
+
+Required entry within the value hash-map:
+<ul>
+<li>:api  Any one of the apis in the driver with an asterisk suffix. These will prepare a request instead of sending off the request. Examples include fetch*, schema*, etc.
+<li>:args An array of the parameters normally passed to your specific api call
+</ul>
+
+Example:
+
+```clojure
+ (fact/multi {:query1 {:api fact/fetch* :args [{:table :global :q "cafe" :limit 10}]}
+              :query2 {:api fact/facets* :args [{:table :global :select "locality,region" :q "http://www.starbucks.com"}]}
+              :query3 {:api fact/reverse-geocode* :args [34.06021 -118.41828]}})
+
+```
+
+For more details on Multi, see [the main API docs](http://developer.factual.com/display/docs/Core+API+-+Multi)
 
 # Handling Bad Responses
 
