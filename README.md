@@ -6,7 +6,7 @@ This is the Factual-supported Clojure driver for [Factual's public API](http://d
 
 The driver is hosted at [Clojars](https://clojars.org/factual/factual-clojure-driver). Just add this to your dependencies:
 
-    [factual/factual-clojure-driver "1.4.0"]
+    [factual/factual-clojure-driver "1.4.1"]
 
 # Setup
 
