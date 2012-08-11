@@ -1,3 +1,12 @@
+## 1.4.1
+
+  * Migrated http client to clj-http
+  * Added support for Multi
+  * Added support for Submit
+  * Added support for Flag
+  * Added support for Diffs
+  * Fixed tests for Crosswalk
+
 ## 1.4.0
 
   * Removed first class Crosswalk (use it as a table instead)
