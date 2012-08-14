@@ -1,14 +1,15 @@
 (ns factual.api
   (:refer-clojure :exclude [resolve])
-  (:require [factual.http :as http])
-  (:use [clojure.data.json :only (read-json)])
+  (:require [oauth.v1 :as oauth])
+  (:use [clojure.data.json :only (read-json json-str)])
+  (:use [clj-http.client :only [generate-query-string]]
+        [clj-http.util :only [url-decode]])
   (:use [slingshot.slingshot :only [throw+]]
-        [clojure.java.io :only (reader)])
-  (:import (com.google.api.client.http HttpResponseException)))
+        [clojure.java.io :only (reader)]))
 
-(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.3.1")
+(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.4.2")
 
-(declare ^:dynamic *factual-config*)
+(declare ^:dynamic *consumer*)
 (defrecord factual-error [code message opts])
 
 (def ^:dynamic *base-url* "http://api.v3.factual.com/")
@@ -20,7 +21,7 @@
    key is your Factual API key
    secret is your Factual API secret"
   [key secret]
-  (def ^:dynamic *factual-config* {:key key :secret secret}))
+  (def ^:dynamic *consumer* (oauth/make-consumer :oauth-consumer-key key :oauth-consumer-secret secret)))
 
 (defmacro service!
   "Sets this driver to use the specified base service URL.
@@ -50,7 +51,9 @@
                ;; standard result set
                (get-in res [:response :data])
                ;; schema result
-               (get-in res [:response :view :fields]))]
+               (get-in res [:response :view :fields])
+               ;; submit result
+               (get-in res [:response]))]
     (with-meta data (merge
                      (dissoc res :response)
                      {:response (dissoc (:response res) :data)}))))
@@ -60,27 +63,35 @@
   `(binding [*debug* true]
      (time ~@body)))
 
-(defn new-error
-  "Given an HttpResponseException, returns a factual-error record representing
-   the error response, which includes things like status code, status message, as
-   well as the original opts used to create the request."
-  [hre opts]
-  (let [res (.getResponse hre)
-        code (.getStatusCode res)
-        msg (.getStatusMessage res)]
-    (factual-error. code msg opts)))
+(defn json-params [m]
+  (reduce
+   (fn [m [k v]]
+     (assoc m
+       ;; query param name
+       (name k)
+       ;; query param value
+       (if (or (keyword? v) (string? v))
+            (name v)
+            (json-str v))))
+   {} m))
 
-(defn debug-resp [resp body]
+(defn debug-resp [resp]
   (println "--- response debug ---")
-  (let [req (.getRequest resp)
-        hdrs (into {} (.getHeaders resp))]
-    (println "resp status code:" (.getStatusCode resp))
-    (println "resp status message:" (.getStatusMessage resp))
+  (let [metadata (meta resp)
+        status (:status metadata)
+        hdrs (:headers metadata)]
+    (println "resp status code:" status)
     (println "resp headers:")
-    (clojure.pprint/pprint (into {} hdrs)))
-  (println "resp body:" body)
-  (println body)
-  (println "----------------------"))
+    (clojure.pprint/pprint (into {} hdrs))
+    (println "resp:")
+    (println resp)
+    (println "----------------------")))
+
+(defn debug-req [req]
+  (println "request parameters:")
+  (clojure.pprint/pprint (:params req))
+  (println "body form parameters:")
+  (clojure.pprint/pprint (:content req)))
 
 (defn get-results
   "Executes the specified request and returns the results.
@@ -93,24 +104,18 @@
    In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
-  [{:keys [method path params content] :or {method :get}}]
-  (when *debug* (println "--- Driver version:" DRIVER_VERSION_TAG))
-  (try
-    (let [url (str *base-url* path)
-          headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-          resp (http/request {:method method :url url :headers headers :params params :content content :auth *factual-config* :debug *debug*})
-          body (slurp (reader (.getContent resp)))]
-      (when *debug* (debug-resp resp body))
-      (do-meta (read-json body)))
-    (catch RuntimeException re
-      ;; would be nice if HttpResponseException was at the top
-      ;; level, however seems like it comes back nested at least
-      ;; some of the time
-      (if (= HttpResponseException (class (.getCause re)))
-        (throw+ (new-error (.getCause re) params))
-        (throw re)))
-    (catch HttpResponseException hre
-      (throw+ (new-error hre params)))))
+  [{:keys [method path params content] :or {method :get} :as req}]
+  (when *debug* (debug-req req))
+  (let [url (str *base-url* path)
+        headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
+        resp (*consumer* {:method method :url url :headers headers :query-params (if params (json-params params) nil) :body (if content (generate-query-string (json-params content)) nil) :as :json :throw-exceptions false :save-request? true :debug *debug* :debug-body *debug*})
+        status (:status (meta resp))]
+    (when *debug* (debug-resp resp))
+    (if (and (not (nil? status)) (== 200 status))
+      (if (.equalsIgnoreCase path "multi")
+        (into {} (for [[k v] resp] [k (do-meta v)]))
+        (do-meta resp))
+      (throw+ (factual-error. status (:message resp) params)))))
 
 (defn fetch-disp
   "Dispatch method for fetch. Returns:
@@ -121,7 +126,11 @@
   (if (= 1 (count args))
     (if (map? (first args))
       :q :table)
-      :table-and-q))
+    :table-and-q))
+
+(defn fetch* [map]
+  {:pre [(:table map)]}
+  {:path (str "t/" (name (:table map))) :params (dissoc map :table) })
 
 (defmulti fetch
   "Runs a fetch request against Factual and returns the results.
@@ -151,8 +160,7 @@
 
 (defmethod fetch :q
   [q]
-  {:pre [(:table q)]}
-  (get-results {:path (str "t/" (name (:table q))) :params (dissoc q :table)}))
+  (get-results (fetch* q)))
 
 (defmethod fetch :table
   [table]
@@ -173,6 +181,10 @@
     (if (map? (second args))
       :table-and-q
       :table-and-select)))
+
+(defn facets* [q]
+  {:pre [(:table q) (:select q)]}
+  {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)})
 
 (defmulti facets
   "Runs a Facets request against Factual and returns the results.
@@ -205,10 +217,10 @@
      (facets :us-restaurants \"locality\")"
   facets-disp)
 
+
 (defmethod facets :q
   [q]
-  {:pre [(:table q)(:select q)]}
-  (get-results {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)}))
+  (get-results (facets* q)))
 
 (defmethod facets :table-and-q
   [table q]
@@ -219,22 +231,132 @@
   [table select]
   (facets {:table table :select select}))
 
+(defn schema* [table]
+  {:path (str "t/" (name table) "/schema")})
+
 (defn schema
   "Returns the schema of the specified table, as a hash-map. Example usage:
    (schema :places)"
   [table]
-  (get-results {:path (str "t/" (name table) "/schema")}))
+  (get-results (schema* table)))
 
-(defn crosswalk [& {:as opts}]
-  (map #(update-in % [:namespace] keyword)
-       (get-results {:path "places/crosswalk" :params opts})))
+(defn resolve*
+  [values]
+  {:path "places/resolve" :params {:values values}})
 
-(defn resolve [values]
-  (get-results {:path "places/resolve" :params {:values values}}))
+(defn resolve
+  "Takes a hash-map of values indicating what you know about a place. Returns a result
+   set with exactly one record as a hash-map if the Factual platform found a suitable
+   candidate that meets the criteria you specified. Returns an empty result set otherwise."
+  [values]
+  (get-results (resolve* values)))
 
-(defn resolved [values]
+(defn resolved
+  "DEPRECATED. Use resolve, which now returns either one entity or none. One if
+   Resolve found a confident match, none if not."
+  {:deprecated "1.3.2"}
+  [values]
   (first (filter :resolved
-                 (get-results {:path "places/resolve" :params {:values values}}))))
+                 (resolve values))))
+
+(defn match* [values]
+  {:path "places/match" :params {:values values}})
+
+(defn match
+  "Attempts to match values. When a match is found, returns a result set with exactly one hash-map,
+   which holds :factual_id. When the Factual platform cannot identify your entity unequivocally,
+   returns an empty results set."
+  [values]
+  (get-results (match* values)))
+
+(defn diff*
+  ([values]
+     {:pre [(:table values) (:start values) (:end values)]}
+     {:path (str "t/" (:table values) "/diffs") :params (dissoc values :table)})
+  ([table values]
+     (diff* (assoc values :table table))))
+
+(defn diff
+  "diff is used to view changes to a table during a given time range
+
+   There are two variations.
+   Variation 1: [values]
+   Values is a map containing a value for :table, :start, and :end.
+   The start and end dates are epoch timestamps in milliseconds.
+
+   Variation 2: [table values]
+   The two arguments are the name of the table to obtain diffs for and a map
+   containing a :start and :end, which are epoch timestamps in ms.
+
+   Ex. (diff {:table \"places-us\" :start 1318890505254
+              :end 1318890516892})
+       (diff \"places-us\" {:start 1318890505254 :end 1318890516892})"
+  ([values]
+     (get-results (diff* values)))
+  ([table values]
+     (get-results (diff* table values))))
+
+(defn generate-multi-url [map]
+  {:pre [(:api map) (:args map)]}
+  (let [f (:api map)
+        req-map (apply f (:args map))
+        url-params (generate-query-string  (json-params (:params req-map)))]
+    (str "/" (:path req-map) (when-not (empty? url-params) "?") url-params)))
+
+(defn multi
+  "map is a hash-map specifying the full queries. The keys are the names of the queries,
+   and the values are hash-maps containing the api and args.
+   Required entry within the value hash-map:
+     :api  Any one of the apis in the driver with an asterisk suffix. These will prepare a request instead of sending off the request. Examples include fetch*, schema*, etc.
+     :args An array of the parameters normally passed to your specific api call
+   Example usage:
+     (multi {:query1 {:api fetch* :args [{:table :global :q \"cafe\" :limit 10}]}
+             :query2 {:api facets* :args [{:table :global :select \"locality,region\" :q \"http://www.starbucks.com\"}]}
+             :query3 {:api reverse-geocode* :args [34.06021 -118.41828]}})"
+  [map]
+  (let [queries  (into {} (for [[k v] map] [k (generate-multi-url v)]))]
+    (get-results {:method :get :path "multi" :params {:queries (json-str queries)} })))
+
+
+(defn submit*
+  ([id s]
+     {:pre [(:table s) (:values s) (:user s)]}
+     (let [path (if id
+                  (str "t/" (name (:table s)) "/" (name id) "/submit")
+                  (str "t/" (name (:table s)) "/submit"))
+           params {:user (:user s)}]
+       {:path path :method :post :params params :content {:values (:values s)}}))
+  ([s]
+     (submit* nil s)))
+
+(defn submit
+  ([id s] (get-results (submit* id s)))
+  ([s] (get-results (submit* s))))
+
+(defn flag*
+  [id f]
+  {:pre [(:table f) (:problem f) (:user f)]}
+  (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
+        content (select-keys f [:problem :user :comment :reference])]
+    {:path path :method :post :content content}))
+
+(defn flag
+  "Flags a specified entity as problematic.
+
+   id is the Factual ID for the entity to flag.
+
+   f must be a hash-map containing:
+     :table :problem :user
+   f may optionally contain
+     :comment :reference
+
+   :problem must be one of:
+     :duplicate, :inaccurate, :inappropriate, :nonexistent, :spam, :other"
+  [id f]
+  (get-results (flag* id f)))
+
+(defn geopulse* [q]
+  {:path "places/geopulse" :params q})
 
 (defn geopulse
   "Runs a Geopulse request against Factual and returns the results.
@@ -250,7 +372,10 @@
    Example usage:
    (geopulse {:geo {:$point [34.06021,-118.41828]} :select \"income,race,age_by_gender\"})"
   [q]
-  (get-results {:path "places/geopulse" :params q}))
+  (get-results (geopulse* q)))
+
+(defn reverse-geocode* [lat lon]
+  {:path "places/geocode" :params {:geo { :$point [lat lon]}}})
 
 (defn reverse-geocode
   "Given latitude lat and longitude lon, uses Factual's reverse geocoder to return the
@@ -259,4 +384,21 @@
    Example usage:
    (reverse-geocode 34.06021,-118.41828)"
   [lat lon]
-  (get-results {:path "places/geocode" :params {:geo { :$point [lat lon]}}}))
+  (get-results (reverse-geocode* lat lon)))
+
+(defn monetize* [params]
+  {:path "places/monetize" :params params})
+
+(defn monetize
+  "Runs a Monetize request against Factual and returns the results.
+
+   Params should be a hash-map holding your query parameters, such as:
+     :q for full text search,
+     :fitlers for row filters,
+     :geo for a geo filter,
+     etc.
+
+   Example usage:
+   (monetize {:q \"Fried Chicken, Los Angeles\"})"
+  [params]
+  (get-results (monetize* params)))
