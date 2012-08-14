@@ -1,3 +1,9 @@
+## 1.4.2
+
+  * Added support for Match
+  * Updated resolve to be consistent with Factual's new version
+  * Deprecated resolved
+
 ## 1.4.1
 
   * Migrated http client to clj-http
