@@ -53,6 +53,11 @@
                            :address "10250 santa monica"}))]
     (is (= true (:resolved res)))))
 
+(deftest test-match
+  (let [res (fact/match {:name "McDonalds" :latitude 34.05671 :longitude -118.42586})]
+    (is (= 1 (count res)))
+    (is (contains? (first res) :factual_id))))
+
 (deftest test-crosswalk
   (is (< 3 (count
              (fact/fetch {:table :crosswalk :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77"}})))))

@@ -6,7 +6,9 @@ This is the Factual-supported Clojure driver for [Factual's public API](http://d
 
 The driver is hosted at [Clojars](https://clojars.org/factual/factual-clojure-driver). Just add this to your dependencies:
 
-    [factual/factual-clojure-driver "1.4.1"]
+```clojure
+[factual/factual-clojure-driver "1.4.2"]
+```
 
 # Setup
 
@@ -337,15 +339,31 @@ More details on Crosswalk can be found in (our general API documentation for Cro
 
 # Resolve
 
-Resolve provides an entity resolution API that makes partial records complete, matches one entity against another, and assists in de-duping and normalizing datasets.
+Use the <tt>resolve</tt> function to enrich your data and match it against Factual's.
 
-The <tt>resolve</tt> function takes a hash-map of values indicating what you know about a place. It returns the set of potential matches, including a similarity score.
+The <tt>resolve</tt> function takes a hash-map of values indicating what you know about a place. Returns a result set with exactly one record as a hash-map if the Factual platform found a suitable candidate that meets the criteria you specified. Returns an empty result set otherwise.
 
 Example:
 
 ```clojure
 ; Find the entity named "McDonald's" with only a specified lat/lng
 (fact/resolve {:name "McDonalds", :latitude 34.05671 :longitude -118.42586})
+```
+
+# Match
+
+The <tt>match</tt> function attempts to find the Factual ID of the data that matches your data. When a match is found, it returns a result set with exactly one hash-map, which holds :factual_id. When the Factual platform cannot identify your entity unequivocally, the <tt>match</tt> function returns an empty results set.
+
+Examples:
+
+```clojure
+; Find the entity named "McDonald's" with an address combination
+(fact/match {:name "McDonalds" :address "10451 Santa Monica Blvd" :region "CA" :postcode "90025"})
+```
+
+```clojure
+; Find the entity named "McDonald's" with only a specified lat/lng
+(fact/match {:name "McDonalds" :latitude 34.05671 :longitude -118.42586})
 ```
 
 # Results Metadata

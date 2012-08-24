@@ -7,7 +7,7 @@
   (:use [slingshot.slingshot :only [throw+]]
         [clojure.java.io :only (reader)]))
 
-(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.3.1")
+(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.4.2")
 
 (declare ^:dynamic *consumer*)
 (defrecord factual-error [code message opts])
@@ -240,15 +240,34 @@
   [table]
   (get-results (schema* table)))
 
-(defn resolve* [values]
+(defn resolve*
+  [values]
   {:path "places/resolve" :params {:values values}})
 
-(defn resolve [values]
+(defn resolve
+  "Takes a hash-map of values indicating what you know about a place. Returns a result
+   set with exactly one record as a hash-map if the Factual platform found a suitable
+   candidate that meets the criteria you specified. Returns an empty result set otherwise."
+  [values]
   (get-results (resolve* values)))
 
-(defn resolved [values]
+(defn resolved
+  "DEPRECATED. Use resolve, which now returns either one entity or none. One if
+   Resolve found a confident match, none if not."
+  {:deprecated "1.3.2"}
+  [values]
   (first (filter :resolved
                  (resolve values))))
+
+(defn match* [values]
+  {:path "places/match" :params {:values values}})
+
+(defn match
+  "Attempts to match values. When a match is found, returns a result set with exactly one hash-map,
+   which holds :factual_id. When the Factual platform cannot identify your entity unequivocally,
+   returns an empty results set."
+  [values]
+  (get-results (match* values)))
 
 (defn diff*
   ([values]
