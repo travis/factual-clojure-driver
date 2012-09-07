@@ -7,7 +7,7 @@
   (:use [slingshot.slingshot :only [throw+]]
         [clojure.java.io :only (reader)]))
 
-(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.4.2")
+(def DRIVER_VERSION_TAG "factual-clojure-driver-v1.4.3")
 
 (declare ^:dynamic *consumer*)
 (defrecord factual-error [code message opts])
