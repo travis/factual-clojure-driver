@@ -1,6 +1,7 @@
 ## Unreleased 1.4.3
 
   * Added integration tests for Unicode support
+  * Added use of sosueme/conf/dot-factual; demo and tests now expect auth in ~/.factual/factual-auth.yaml
 
 ## 1.4.2
 

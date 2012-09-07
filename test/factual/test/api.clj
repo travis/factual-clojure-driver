@@ -1,5 +1,6 @@
 (ns factual.test.api
-  (:require [factual.api :as fact])
+  (:require [factual.api :as fact]
+            [sosueme.conf :as conf])
   (:import [factual.api factual-error])
   (:use [clojure.test]
         [clojure.data.json :only (json-str read-json)]
@@ -7,11 +8,15 @@
 
 (defn connect
   "Test fixture that connects this namespace to Factual's API.
-   You must put your key and secret in resources/oauth.json.
-   See resources/oauth.sample.json for the expected format."
+   You must put your key and secret in ~/.factual/factual-auth.yaml, which should
+   look like:
+
+   ---
+   key: MYKEY
+   secret: MYSECRET"
   [f]
-  (let [auth (read-json (slurp "resources/oauth.json"))]
-    (fact/factual! (:key auth) (:secret auth)))
+  (let [{:keys [key secret]} (conf/dot-factual "factual-auth.yaml")]
+    (fact/factual! key secret))
   (f))
 
 (use-fixtures :once connect)
