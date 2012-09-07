@@ -1,4 +1,4 @@
-(defproject factual/factual-clojure-driver "1.4.2"
+(defproject factual/factual-clojure-driver "1.4.3"
   :url "http://github.com/Factual/factual-clojure-driver"
   :description "Officially supported Clojure driver for Factual's public API"
   :dependencies [
@@ -8,4 +8,5 @@
     [oauth-clj "0.0.5"]
     [clj-http "0.5.2"]] ;oauth-clj has dependency on clj-http as well, but the debug feature for
                         ;that version didn't work
-  :dev-dependencies [[lein-clojars "0.6.0"]])
+  :dev-dependencies [[factual/sosueme "0.0.14"]
+                     [lein-clojars "0.6.0"]])

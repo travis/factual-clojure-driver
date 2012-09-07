@@ -1,5 +1,6 @@
 (ns factual.test.api
-  (:require [factual.api :as fact])
+  (:require [factual.api :as fact]
+            [sosueme.conf :as conf])
   (:import [factual.api factual-error])
   (:use [clojure.test]
         [clojure.data.json :only (json-str read-json)]
@@ -7,11 +8,15 @@
 
 (defn connect
   "Test fixture that connects this namespace to Factual's API.
-   You must put your key and secret in resources/oauth.json.
-   See resources/oauth.sample.json for the expected format."
+   You must put your key and secret in ~/.factual/factual-auth.yaml, which should
+   look like:
+
+   ---
+   key: MYKEY
+   secret: MYSECRET"
   [f]
-  (let [auth (read-json (slurp "resources/oauth.json"))]
-    (fact/factual! (:key auth) (:secret auth)))
+  (let [{:keys [key secret]} (conf/dot-factual "factual-auth.yaml")]
+    (fact/factual! key secret))
   (f))
 
 (use-fixtures :once connect)
@@ -75,7 +80,8 @@
 #_(deftest test-diff
     (let [res (fact/diff {:table :global :start 1318890505254 :end 1318890516892})]))
 
-(deftest test-submit
+;;submit backend broken
+#_(deftest test-submit
   (let [res (fact/submit {:table "t7RSEV" :user "test_user" :values {:name "A New Restaurant" :locality "Los Angeles"}})]
     (is (not
          (or (nil? (get res :factual_id))
@@ -85,3 +91,30 @@
 #_(deftest test-flag
     (let [res (fact/flag "74ce3ae9-7ae1-4141-9752-1cac3305b797" {:table "restaurants-us" :problem "nonexistent" :user "test_user"})]
       ...))
+
+(defn every-locality? [res val]
+  (every? #(= % val) (map :locality res)))
+
+(deftest test-unicode-basic
+  (let [res (fact/fetch {:table :global
+                         :filters {:locality "大阪市"}
+                         :limit 5})]
+    (is (= (count res) 5))
+    (is (every-locality? res "大阪市"))))
+
+(deftest test-unicode-multi
+         (let [mres (fact/multi {:q1 {:api fact/fetch* :args [{:table :global :filters {:locality "בית שמש"}}]}
+                                 :q2 {:api fact/fetch* :args [{:table :global :filters {:locality "München"} :limit 10}]}
+                                 :q3 {:api fact/resolve* :args [{:name "César E. Chávez Library" :locality "Oakland" :region "CA" :address "3301 E 12th St"}]}})
+               res1 (:q1 mres)
+               res2 (:q2 mres)
+               res3 (:q3 mres)]
+
+    (is (> (count res1) 0))
+    (is (every-locality? res1 "בית שמש"))
+
+    (is (= (count res2) 10))
+    (is (every-locality? res2 "München"))
+
+    (is (= (count res3) 1))
+    (is (= (:tel (first res3)) "(510) 535-5620"))))
