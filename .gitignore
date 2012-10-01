@@ -8,3 +8,4 @@
 /.lein-deps-sum
 /resources/oauth.json
 /logs/**
+/target/**

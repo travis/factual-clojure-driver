@@ -125,24 +125,27 @@
    In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
-  [{:keys [method path params content] :or {method :get} :as req}]
+  [{:keys [method path params content raw-request]
+    :or {method :get}
+    :as req}]
   (when *debug* (debug-req req))
-  (prn req)
   (let [url (str *base-url* path)
         headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
         resp ((consumer)
-              {:method method
-               :url url
-               :headers headers
-               :query-params (if params (json-params params) nil)
-               :body (if content (generate-query-string (json-params content)) nil)
-               :throw-exceptions false
-               :save-request? true
-               :debug *debug*
-               :debug-body *debug*})
+              (merge
+                {:method method
+                 :url url
+                 :headers headers
+                 :query-params (if params (json-params params) nil)
+                 :body (if content (generate-query-string (json-params content)) nil)
+                 :throw-exceptions false
+                 :save-request? true
+                 :debug *debug*
+                 :debug-body *debug*}
+                raw0request))
         status (:status (meta resp))]
     (when *debug* (debug-resp resp))
-    (if (== 200 status)
+    (if (or (instance? InputStream resp) (= 200 status))
       (cond
 
         (.equalsIgnoreCase path "multi")
@@ -346,7 +349,9 @@
   ([values]
      {:pre [(:table values) (:start values)]}
      
-     {:path (str "t/" (:table values) "/diffs") :params (dissoc values :table)}))
+     {:path (str "t/" (:table values) "/diffs")
+      :params (dissoc values :table)
+      :raw-request {:as :stream}}))
 
 (defn diff
   "diff is used to view changes to a table.
