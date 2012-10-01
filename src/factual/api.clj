@@ -342,8 +342,8 @@
   {:close #(.close input-stream)
    :stream (->> input-stream io/reader line-seq (map json/parse-string))})
 
-(defn diff*
-  "Returns a query for diff requests.  Can be passed into 'execute-request', or used within 'multi'."
+(defn diff-query
+  "Returns a query for diff requests, which can be passed into 'execute-request'."
   ([table values]
      (diff* (assoc values :table table)))
   ([values]
@@ -375,9 +375,9 @@
 
    :close is a function which can be used to terminate the stream."
   ([values]
-     (->> (diff* values) execute-request transform-diff-response))
+     (->> (diff-query values) execute-request transform-diff-response))
   ([table values]
-     (->> (diff* table values) execute-request transform-diff-response)))
+     (->> (diff-query table values) execute-request transform-diff-response)))
 
 ;;;
 
