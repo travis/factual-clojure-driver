@@ -142,7 +142,7 @@
                  :save-request? true
                  :debug *debug*
                  :debug-body *debug*}
-                raw0request))
+                raw-request))
         status (:status (meta resp))]
     (when *debug* (debug-resp resp))
     (if (or (instance? InputStream resp) (= 200 status))
