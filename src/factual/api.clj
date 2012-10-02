@@ -340,12 +340,15 @@
 
 (defn- transform-diff-response [^InputStream input-stream]
   {:close #(.close input-stream)
-   :stream (->> input-stream io/reader line-seq (map json/parse-string))})
+   :stream (->> input-stream
+             io/reader
+             line-seq
+             (map #(json/parse-string % true)))})
 
 (defn diff-query
   "Returns a query for diff requests, which can be passed into 'execute-request'."
   ([table values]
-     (diff* (assoc values :table table)))
+     (diff-query (assoc values :table table)))
   ([values]
      {:pre [(:table values) (:start values)]}
      
