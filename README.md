@@ -7,7 +7,7 @@ This is the Factual-supported Clojure driver for [Factual's public API](http://d
 The driver is hosted at [Clojars](https://clojars.org/factual/factual-clojure-driver). Just add this to your dependencies:
 
 ```clojure
-[factual/factual-clojure-driver "1.4.3"]
+[factual/factual-clojure-driver "1.4.4"]
 ```
 
 # Setup
@@ -22,9 +22,9 @@ If you don't have a Factual API account yet, [it's free and easy to get one](htt
 
 # Fetch
 
-The <tt>fetch</tt> function supports rich read queries. It takes a hash-map as its argument, which specifies the full query. The only required entry is :table, which must be associated with a valid Factual table name. Optional query parameters, such as row filters and geolocation, are specified with further entries in q.
+The `fetch` function supports rich read queries. It takes a hash-map as its argument, which specifies the full query. The only required entry is :table, which must be associated with a valid Factual table name. Optional query parameters, such as row filters and geolocation, are specified with further entries in q.
 
-<tt>fetch</tt> returns a sequence of records, where each record is a hash-map representing a row of results. The returned sequence will have response metatada attached to it, which includes things like API version, status, and extra row count information if it was requested.
+`fetch` returns a sequence of records, where each record is a hash-map representing a row of results. The returned sequence will have response metatada attached to it, which includes things like API version, status, and extra row count information if it was requested.
 
 Simple example:
 
@@ -113,19 +113,19 @@ You could use the above function like so:
 (deliver-dinner 34.039792 -118.423421)
 ```
 
-## Variations of <tt>fetch</tt>
+## Variations of `fetch<`
 
-For added convenience, the <tt>fetch</tt> function supports several other argument variations. For example, this will work:
+For added convenience, the `fetch` function supports several other argument variations. For example, this will work:
 
 ```clojure
 (fact/fetch :places {:limit 3})
 ```
 
-See the docs on <tt>fetch</tt> for more details.
+See the docs on `fetch` for more details.
 
 ## Using Fetch with any Factual dataset
 
-<tt>fetch</tt> allows you to specify any valid Factual dataset. E.g.:
+`fetch` allows you to specify any valid Factual dataset. E.g.:
 
 ```clojure
 (fact/fetch {:table :global :limit 12})
@@ -165,73 +165,73 @@ The driver supports all available row filtering logic. Examples:
   <tr>
     <td>$eq</td>
     <td>equal to</td>
-    <td><tt>{:region {:$eq "CA"}}</tt></td>
+    <td>`{:region {:$eq "CA"}}`</td>
   </tr>
   <tr>
     <td>$neq</td>
     <td>not equal to</td>
-    <td><tt>{:region {:$neq "CA"}}</tt></td>
+    <td>`{:region {:$neq "CA"}}`</td>
   </tr>
   <tr>
     <td>$search</td>
     <td>full text search</td>
-    <td><tt>{:name {:$search "fried chicken"}}</tt></td>
+    <td>`{:name {:$search "fried chicken"}}`</td>
   </tr>
   <tr>
     <td>$in</td>
     <td>equals any of</td>
-    <td><tt>{:region {:$in ["MA", "VT", "NH", "RI", "CT"]}}</tt></td>
+    <td>`{:region {:$in ["MA", "VT", "NH", "RI", "CT"]}}`</td>
   </tr>
   <tr>
     <td>$nin</td>
     <td>does not equal any of</td>
-    <td><tt>{:region {:$nin ["MA", "VT", "NH", "RI", "CT"]}}</tt></td>
+    <td>`{:region {:$nin ["MA", "VT", "NH", "RI", "CT"]}}`</td>
   </tr>
   <tr>
     <td>$bw</td>
     <td>begins with</td>
-    <td><tt>{:name {:$bw "starbucks"}}</tt></td>
+    <td>`{:name {:$bw "starbucks"}}`</td>
   </tr>
   <tr>
     <td>$nbw</td>
     <td>does not begin with</td>
-    <td><tt>{:name {:$nbw "starbucks"}}</tt></td>
+    <td>`{:name {:$nbw "starbucks"}}`</td>
   </tr>
   <tr>
     <td>$bwin</td>
     <td>begins with any of</td>
-    <td><tt>{:name {:$bwin ["starbucks" "tea" "coffee"]}}</tt></td>
+    <td>`{:name {:$bwin ["starbucks" "tea" "coffee"]}}`</td>
   </tr>
   <tr>
     <td>$nbwin</td>
     <td>does not begin with any of</td>
-    <td><tt>{:name {:$nbwin ["starbucks" "tea" "coffee"]}}</tt></td>
+    <td>`{:name {:$nbwin ["starbucks" "tea" "coffee"]}}`</td>
   </tr>
   <tr>
     <td>$blank</td>
     <td>whether is blank or null</td>
-    <td><tt>{:name {:$blank true}}<br>
-            {:name {:$blank false}}</tt></td>
+    <td>`{:name {:$blank true}}<br>
+            {:name {:$blank false}}`</td>
   </tr>
   <tr>
     <td>$gt</td>
     <td>greater than</td>
-    <td><tt>{:rating {:$gt 3.0}}</tt></td>
+    <td>`{:rating {:$gt 3.0}}`</td>
   </tr>
   <tr>
     <td>$gte</td>
     <td>greater than or equal to</td>
-    <td><tt>{:rating {:$gte 3.0}}</tt></td>
+    <td>`{:rating {:$gte 3.0}}`</td>
   </tr>
   <tr>
     <td>$lt</td>
     <td>less than</td>
-    <td><tt>{:rating {:$lt 3.0}}</tt></td>
+    <td>`{:rating {:$lt 3.0}}`</td>
   </tr>
   <tr>
     <td>$lte</td>
     <td>less than or equal to</td>
-    <td><tt>{:rating {:$lte 3.0}}</tt></td>
+    <td>`{:rating {:$lte 3.0}}`</td>
   </tr>
 </table>
 
@@ -246,7 +246,7 @@ Common use cases include:
 * Validating data against city, state, country and county names
 * A translation table to convert between the search key used by a user, i.e. '慕尼黑' or 'Munich' for the native 'München'
 
-You can use the <tt>fetch</tt> function to query World Geographies, supplying :world-geographies as the table name.
+You can use the `fetch` function to query World Geographies, supplying :world-geographies as the table name.
 
 Examples:
 
@@ -277,27 +277,27 @@ For more details about World Geographies, including schema, see [the main API do
 
 # Facets
 
-The <tt>facets</tt> function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
+The `facets` function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
 
 ```clojure
 (fact/facets {:table :restaurants-us :select "category" :geo {:$circle {:$center [34.039792 -118.423421] :$meters 1600}}})
 ```
 
-The argument to facets is a hash-map of query parameters, and must include entries for <tt>:table</tt> and <tt>:select</tt>. The value for <tt>:select</tt> must be a comma-delimited String indicating which field(s) to facet, e.g. <tt>"locality,region"</tt>.
+The argument to facets is a hash-map of query parameters, and must include entries for `:table` and `:select`. The value for `:select` must be a comma-delimited String indicating which field(s) to facet, e.g. `"locality,region"`.
 
-Not all fields are configured to return facet counts.  To determine what fields you can return facets for, use the <tt>schema</tt> function on the relevant table.  The faceted attribute of the returned schema will let you know.
+Not all fields are configured to return facet counts.  To determine what fields you can return facets for, use the `schema` function on the relevant table.  The faceted attribute of the returned schema will let you know.
 
-## Variations of <tt>facets</tt>
+## Variations of `facets`
 
-For added convenience, the <tt>facets</tt> function supports several other argument variations. For example, this will work:
+For added convenience, the `facets` function supports several other argument variations. For example, this will work:
 
 ```clojure
 (facets :us-restaurants "locality")
 ```
 
-See the docs on <tt>facets</tt> for more details.
+See the docs on `facets` for more details.
 
-## More <tt>facets</tt> Examples
+## More `facets` Examples
 
 ```clojure
 ;; Count Starbucks in the US by city and state
@@ -339,9 +339,9 @@ More details on Crosswalk can be found in (our general API documentation for Cro
 
 # Resolve
 
-Use the <tt>resolve</tt> function to enrich your data and match it against Factual's.
+Use the `resolve` function to enrich your data and match it against Factual's.
 
-The <tt>resolve</tt> function takes a hash-map of values indicating what you know about a place. Returns a result set with exactly one record as a hash-map if the Factual platform found a suitable candidate that meets the criteria you specified. Returns an empty result set otherwise.
+The `resolve` function takes a hash-map of values indicating what you know about a place. Returns a result set with exactly one record as a hash-map if the Factual platform found a suitable candidate that meets the criteria you specified. Returns an empty result set otherwise.
 
 Example:
 
@@ -352,7 +352,7 @@ Example:
 
 # Match
 
-The <tt>match</tt> function attempts to find the Factual ID of the data that matches your data. When a match is found, it returns a result set with exactly one hash-map, which holds :factual_id. When the Factual platform cannot identify your entity unequivocally, the <tt>match</tt> function returns an empty results set.
+The `match` function attempts to find the Factual ID of the data that matches your data. When a match is found, it returns a result set with exactly one hash-map, which holds :factual_id. When the Factual platform cannot identify your entity unequivocally, the `match` function returns an empty results set.
 
 Examples:
 
@@ -368,7 +368,7 @@ Examples:
 
 # Results Metadata
 
-Factual's API returns more than just results rows. It also returns various metadata about the results. You can access this metadata by using Clojure's <tt>meta</tt> function on your results. Examples:
+Factual's API returns more than just results rows. It also returns various metadata about the results. You can access this metadata by using Clojure's `meta` function on your results. Examples:
 
 ```clojure
 > (meta (fact/fetch {:table :places :filters {:name {:$bw "Starbucks"}} :include_count true}))
@@ -391,7 +391,7 @@ You can get the schema for a specific table like this:
 # Submit
 NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
 
-The <tt>submit</tt> function lets you submit new or corrected data to Factual. Examples:
+The `submit` function lets you submit new or corrected data to Factual. Examples:
 
 ```clojure
 ; Submit a new entity to Factual's U.S. Restaurants table
@@ -407,7 +407,7 @@ The :user parameter is required, and specifies the identity of the end user that
 
 # Flag
 NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
-The <tt>flag</tt> function lets you flag a Factual entity as problematic. For example:
+The `flag` function lets you flag a Factual entity as problematic. For example:
 
 ```clojure
 (fact/flag "97598010-433f-4946-8fd5-4a6dd1639d77" {:table :places :problem :spam :user "boris_123"})
@@ -441,7 +441,7 @@ Factual Geopulse provides point-based access to geographic attributes: you provi
 
 The Geopulse API is made up of several "pulses".  Pulses are georeferenced attributes generated by Factual, sourced from openly available content (such as the US Census), or provided to Factual by proprietary third-parties.
 
-You can run a Geopulse query using the <tt>geopulse</tt> function. You pass it a hash-map specifying the query parameters. It must contain <tt>:geo</tt>. It can optionally contain <tt>:select</tt>. If <tt>:select</tt> is included, it must be a comma delimited list of available Factual pulses.
+You can run a Geopulse query using the `geopulse` function. You pass it a hash-map specifying the query parameters. It must contain `:geo`. It can optionally contain `:select`. If `:select` is included, it must be a comma delimited list of available Factual pulses.
 
  Example usage:
 
@@ -512,16 +512,15 @@ Examples:
 
 For more details on Monetize, including schema, see [the main API docs](http://developer.factual.com/display/docs/Places+API+-+Monetize)
 
-# Diff
-NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
+# Diffs
 
-Diff is most useful for users who download Factual's dataset and use it locally.  Diff allows the user to view changes to a table between given times.  Presumably, the user will use it to see any changes to Factual's data since the last download.  The beginning and end times are represented as epoch timestamps in milliseconds.
+`diffs` is most useful for users who download Factual's dataset and use it locally.  It returns a sequence containing all changes to the given dataset between `:start` and `:end`.  The beginning and end times are represented as epoch timestamps in milliseconds.
 
 Example:
 
 ```clojure
- (fact/diff {:table "global" :start 1318890505254 :end 1318890516892})
- (fact/diff "global" {:start 1318890505254 :end 1318890516892})
+ (fact/diffs {:table "global" :start 1318890505254 :end 1318890516892})
+ (fact/diffs "global" {:start 1318890505254 :end 1318890516892})
 ```
 
 For more details on Diffs, see [the main API docs](http://developer.factual.com/display/docs/Core+API+-+Diffs)
@@ -631,7 +630,7 @@ No let's use Crosswalk to fine out what Yelp has to say about this place. Note t
 
 That gives me the yelp URL for the Aroma Cafe, so I can read up on it on Yelp.com.
 
-Of course, Factual supports other Crosswalked sources besides Yelp. If you look at each row returned by the <tt>crosswalk</tt> function, you'll see there's a <tt>:namespace</tt> in each one. Let's find out what namespaces are available for the Aroma Cafe:
+Of course, Factual supports other Crosswalked sources besides Yelp. If you look at each row returned by the `crosswalk` function, you'll see there's a `:namespace` in each one. Let's find out what namespaces are available for the Aroma Cafe:
 
 ```clojure
     > (map :namespace (fact/crosswalk :factual_id "eb67e10b-b103-41be-8bb5-e077855b7ae7"))
@@ -662,15 +661,15 @@ Now we can do this:
 
 This driver and the Factual service should always work perfectly, all the time. But in the highly unlikely, almost impossible event that things go wrong, there is a debug mode that will help with troubleshooting.
 
-If you wrap your call(s) with the <tt>debug</tt> macro, verbose debug information will be sent to stdout. This will provide details about the request sent to Factual and the response that was returned.
+If you wrap your call(s) with the `debug` macro, verbose debug information will be sent to stdout. This will provide details about the request sent to Factual and the response that was returned.
 
-Example use of the <tt>debug</tt> macro:
+Example use of the `debug` macro:
 
 ```clojure
 (def data (fact/debug (fact/fetch {:table :places :q "starbucks" :limit 3})))
 ```
 
-You can also wrap <tt>debug</tt> around the lower-level <tt>get-results</tt> function, like so:
+You can also wrap `debug` around the lower-level `get-results` function, like so:
 
 ```clojure
 (def data (fact/debug (fact/get-results "t/places" {:q "starbucks" :limit 3})))

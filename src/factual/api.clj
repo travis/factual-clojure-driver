@@ -338,49 +338,45 @@
 
 ;;;
 
-(defn- transform-diff-response [^InputStream input-stream]
+(defn- transform-diffs-response [^InputStream input-stream]
   {:close #(.close input-stream)
    :stream (->> input-stream
              io/reader
              line-seq
+             (remove empty?)
              (map #(json/parse-string % true)))})
 
-(defn diff-query
+(defn diffs-query
   "Returns a query for diff requests, which can be passed into 'execute-request'."
   ([table values]
      (diff-query (assoc values :table table)))
   ([values]
-     {:pre [(:table values) (:start values)]}
+     {:pre [(:table values) (:start values) (:end values)]}
      
      {:path (str "t/" (:table values) "/diffs")
       :params (dissoc values :table)
       :raw-request {:as :stream}}))
 
-(defn diff
-  "diff is used to view changes to a table.
+(defn diffs
+  "diffs is used to view changes to a table.
 
    There are two variations.
    Variation 1: [values]
-   Values is a map containing a value for :table, :start, and optionally :end.
+   Values is a map containing a value for :table, :start, and :end.
    The start and end dates are epoch timestamps in milliseconds.
 
    Variation 2: [table values]
    The two arguments are the name of the table to obtain diffs for and a map
    containing a :start and :end, which are epoch timestamps in ms.
 
-   Ex. (diff {:table \"places-us\", :start 1318890505254})
-       (diff \"places-us\" {:start 1318890505254 :end 1318890516892})
+   Ex. (diffs {:table \"places-us\", :start 1318890505254 :end 1318890516892})
+       (diffs \"places-us\" {:start 1318890505254 :end 1318890516892})
 
-   Returns a map containing two keys, :close and :stream.
-
-   :stream is a sequence of diffs, which will terminate if an :end was specified,
-   but will remain open and receive diffs as they occur if the request is open-ended.
-
-   :close is a function which can be used to terminate the stream."
+   Returns a sequence of zero or more changes."
   ([values]
-     (->> (diff-query values) execute-request transform-diff-response))
+     (->> (diff-query values) execute-request transform-diff-response :stream))
   ([table values]
-     (->> (diff-query table values) execute-request transform-diff-response)))
+     (->> (diff-query table values) execute-request transform-diff-response :stream)))
 
 ;;;
 
