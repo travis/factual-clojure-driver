@@ -374,9 +374,9 @@
 
    Returns a sequence of zero or more changes."
   ([values]
-     (->> (diff-query values) execute-request transform-diff-response :stream))
+     (->> (diffs-query values) execute-request transform-diff-response :stream))
   ([table values]
-     (->> (diff-query table values) execute-request transform-diff-response :stream)))
+     (->> (diffs-query table values) execute-request transform-diff-response :stream)))
 
 ;;;
 
