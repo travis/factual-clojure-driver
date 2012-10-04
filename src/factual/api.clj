@@ -349,7 +349,7 @@
 (defn diffs-query
   "Returns a query for diff requests, which can be passed into 'execute-request'."
   ([table values]
-     (diff-query (assoc values :table table)))
+     (diffs-query (assoc values :table table)))
   ([values]
      {:pre [(:table values) (:start values) (:end values)]}
      
@@ -374,9 +374,9 @@
 
    Returns a sequence of zero or more changes."
   ([values]
-     (->> (diffs-query values) execute-request transform-diff-response :stream))
+     (->> (diffs-query values) execute-request transform-diffs-response :stream))
   ([table values]
-     (->> (diffs-query table values) execute-request transform-diff-response :stream)))
+     (->> (diffs-query table values) execute-request transform-diffs-response :stream)))
 
 ;;;
 
