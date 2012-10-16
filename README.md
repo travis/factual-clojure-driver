@@ -406,7 +406,7 @@ The <tt>submit</tt> function lets you submit new or corrected data to Factual. E
 
 The :user parameter is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
 
-# 
+# Flag
 
 _NOTICE_: At the current time, this API call is ONLY compatible with places-v3. Please see the [the migration page](http://developer.factual.com/display/docs/Places+API+-+v3+Migration) for more details.
 
