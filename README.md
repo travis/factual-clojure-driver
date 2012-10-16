@@ -389,7 +389,8 @@ You can get the schema for a specific table like this:
 ```
 
 # Submit
-NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
+
+_NOTICE_: At the current time, this API call is ONLY compatible with places-v3. Please see the [the migration page](http://developer.factual.com/display/docs/Places+API+-+v3+Migration) for more details.
 
 The <tt>submit</tt> function lets you submit new or corrected data to Factual. Examples:
 
@@ -405,9 +406,9 @@ The <tt>submit</tt> function lets you submit new or corrected data to Factual. E
 
 The :user parameter is required, and specifies the identity of the end user that is submitting the data. This may be you, or it may be one of your users.
 
-# Flag
-NOTICE: Server support for this feature is still under development. You are getting a preview of how this driver will support the feature. If you try using this feature now, you may not get a successful response. We will remove this notice once the feature is fully supported.
-The <tt>flag</tt> function lets you flag a Factual entity as problematic. For example:
+# 
+
+_NOTICE_: At the current time, this API call is ONLY compatible with places-v3. Please see the [the migration page](http://developer.factual.com/display/docs/Places+API+-+v3+Migration) for more details.
 
 ```clojure
 (fact/flag "97598010-433f-4946-8fd5-4a6dd1639d77" {:table :places :problem :spam :user "boris_123"})
