@@ -33,7 +33,7 @@
   [key secret]
   (reset! consumer-atom (oauth/make-consumer :oauth-consumer-key key :oauth-consumer-secret secret)))
 
-(defn ^:dynamic consumer []
+(defn consumer []
   (if-let [consumer @consumer-atom]
     consumer
     (throw (IllegalArgumentException. "The Factual driver must be initialized using 'factual.api/factual!'"))))
