@@ -3,7 +3,8 @@
   (:require
     [clojure.java.io :as io]
     [oauth.v1 :as oauth]
-    [cheshire.core :as json])
+    [cheshire.core :as json]
+    [clojure.walk :as walk])
   (:use
     [clojure.data.json :only (read-json json-str)]
     [clj-http.client :only [generate-query-string]]
@@ -33,7 +34,7 @@
   [key secret]
   (reset! consumer-atom (oauth/make-consumer :oauth-consumer-key key :oauth-consumer-secret secret)))
 
-(defn ^:dynamic consumer []
+(defn consumer []
   (if-let [consumer @consumer-atom]
     consumer
     (throw (IllegalArgumentException. "The Factual driver must be initialized using 'factual.api/factual!'"))))
@@ -71,18 +72,24 @@
 
 ;;;
 
-(defn- do-meta [res]
-  (when-let [data (or
-                    ;; standard result set
-                    (get-in res [:response :data])
-                    ;; schema result
-                    (get-in res [:response :view :fields])
-                    ;; submit result
-                    (get-in res [:response]))]
-    (with-meta data
-      (merge
-        (dissoc res :response)
-        {:response (dissoc (:response res) :data)}))))
+(defn- meta? [x]
+  (instance? clojure.lang.IMeta x))
+
+(defn- extract-meta [res]
+  (if-let [data (or
+                  ;; standard result set
+                  (get-in res [:response :data])
+                  ;; schema result
+                  (get-in res [:response :view :fields])
+                  ;; submit result
+                  (get-in res [:response]))]
+    (if-not (meta? data)
+      data
+      (with-meta data
+        (merge
+          (dissoc res :response)
+          {:response (dissoc (:response res) :data)})))
+    res))
 
 (defn- json-params [m]
   (reduce
@@ -96,7 +103,7 @@
             (json-str v))))
    {} m))
 
-(defn- debug-resp [resp]
+(defn- debug-rsp [resp]
   (println "--- response debug ---")
   (let [metadata (meta resp)
         status (:status metadata)
@@ -114,6 +121,13 @@
   (println "body form parameters:")
   (clojure.pprint/pprint (:content req)))
 
+(defn- stringify-keys [x]
+  (walk/postwalk
+    #(if (keyword? %)
+       (name %)
+       %)
+    x))
+
 (defn execute-request
   "Executes the specified request and returns the results.
 
@@ -125,38 +139,48 @@
    In the case of a bad response code, throws a factual-error record
    as a slingshot stone. The record will include any opts that were
    passed in by user code."
-  [{:keys [method path params content raw-request]
-    :or {method :get}
+  [{:keys [method path params content raw-request response-transform]
+    :or {method :get
+         response-transform stringify-keys}
     :as req}]
-  (when *debug* (debug-req req))
+
   (let [url (str *base-url* path)
         headers {"X-Factual-Lib" DRIVER_VERSION_TAG}
-        resp ((consumer)
-              (merge
-                {:method method
-                 :url url
-                 :headers headers
-                 :query-params (if params (json-params params) nil)
-                 :body (if content (generate-query-string (json-params content)) nil)
-                 :throw-exceptions false
-                 :save-request? true
-                 :debug *debug*
-                 :debug-body *debug*}
-                raw-request))
-        status (:status (meta resp))]
-    (when *debug* (debug-resp resp))
-    (if (or (instance? InputStream resp) (= 200 status))
-      (cond
+        req (merge
+              {:method method
+               :url url
+               :headers headers
+               :query-params (if params (json-params params) nil)
+               :body (if content (generate-query-string (json-params content)) nil)
+               :throw-exceptions false
+               :as :json
+               :save-request? true
+               :debug *debug*
+               :debug-body *debug*}
+              raw-request)
 
-        (.equalsIgnoreCase path "multi")
-        (into {} (for [[k v] resp] [k (do-meta v)]))
+        _ (when *debug* (debug-req req))
+        rsp ((consumer) req)
+        _ (when *debug* (debug-rsp rsp))
 
-        (map? resp)
-        (do-meta resp)
+        status (:status (meta rsp))
+        valid-response? (or (instance? InputStream rsp) (= 200 status))]
 
-        :else
-        resp)
-      (throw+ (factual-error. status (:message resp) params)))))
+    (when-not valid-response?
+      (throw+ (factual-error. status (:message rsp) params)))
+
+    (let [response-transform (fn [x]
+                               (let [m (meta x)
+                                     x (response-transform x)]
+                                 (if (meta? x)
+                                   (with-meta x m)
+                                   x)))]
+      (response-transform
+        (if (.equalsIgnoreCase path "multi")
+          (into {} (for [[k v] rsp] [k (extract-meta v)]))
+          (extract-meta rsp))))))
+
+;;;
 
 (defn- fetch-disp
   "Dispatch method for fetch. Returns:
@@ -166,15 +190,16 @@
   [& args]
   (if (= 1 (count args))
     (if (map? (first args))
-      :q :table)
+      :q
+      :table)
     :table-and-q))
 
 (defn fetch*
   "Returns a query for fetch requests, which can be passed into 'execute-request' or used within 'multi'."
-  [map]
-  {:pre [(:table map)]}
+  [m]
+  {:pre [(:table m)]}
   
-  {:path (str "t/" (name (:table map))) :params (dissoc map :table) })
+  {:path (str "t/" (name (:table m))) :params (dissoc m :table) })
 
 (defmulti fetch
   "Runs a fetch request against Factual and returns the results.
@@ -355,7 +380,8 @@
      
      {:path (str "t/" (:table values) "/diffs")
       :params (dissoc values :table)
-      :raw-request {:as :stream}}))
+      :raw-request {:as :stream}
+      :response-transform #(->> % transform-diffs-response :stream (map stringify-keys))}))
 
 (defn diffs
   "diffs is used to view changes to a table.
@@ -374,9 +400,9 @@
 
    Returns a sequence of zero or more changes."
   ([values]
-     (->> (diffs-query values) execute-request transform-diffs-response :stream))
+     (execute-request (diffs-query values)))
   ([table values]
-     (->> (diffs-query table values) execute-request transform-diffs-response :stream)))
+     (execute-request (diffs-query table values))))
 
 ;;;
 
@@ -405,7 +431,7 @@
              :query2 {:api facets* :args [{:table :global :select \"locality,region\" :q \"http://www.starbucks.com\"}]}
              :query3 {:api reverse-geocode* :args [34.06021 -118.41828]}})"
   [m]
-  (let [queries  (into {} (for [[k v] map] [k (multi-query v)]))]
+  (let [queries  (into {} (for [[k v] m] [k (multi-query v)]))]
     (execute-request {:method :get :path "multi" :params {:queries (json-str queries)} })))
 
 ;;;
