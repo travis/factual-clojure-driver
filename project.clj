@@ -1,4 +1,4 @@
-(defproject factual/factual-clojure-driver "1.4.3"
+(defproject factual/factual-clojure-driver "1.4.4"
   :url "http://github.com/Factual/factual-clojure-driver"
   :description "Officially supported Clojure driver for Factual's public API"
   :dependencies [
