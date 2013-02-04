@@ -26,7 +26,7 @@
 
 (deftest test-fetch-filters
   (let [res (fact/fetch {:table :restaurants-us :filters {:name "Starbucks"}})
-        uniq-names (vec (distinct (map :name res)))]
+        uniq-names (vec (distinct (map #(get % "name") res)))]
     (is (= ["Starbucks"] uniq-names))))
 
 (deftest test-fetch-factual-error
@@ -42,13 +42,14 @@
 (deftest test-fetch-nearby-cafes
   "Returns up to 50 cafes within specified miles of specified location."
   []
-  (let [res (fact/fetch {:table :places
-              :q "cafe"
-              :filters {:category {:$eq "Food & Beverage"}}
-              :geo {:$circle {:$center [34.06018 -118.41835]
-                              :$meters (* 3 1609.344)}}
-              :include_count true
-                        :limit 5})]
+  (let [res (fact/fetch
+              {:table :places
+               :q "cafe"
+               :filters {:category {:$eq "Food & Beverage"}}
+               :geo {:$circle {:$center [34.06018 -118.41835]
+                               :$meters (* 3 1609.344)}}
+               :include_count true
+               :limit 5})]
     (is (= 5 (count res)))
     (is (< 5 (get-in (meta res) [:response :total_row_count])))))
 
@@ -56,12 +57,12 @@
   (let [res (first
              (fact/resolve {:name "taco"
                            :address "10250 santa monica"}))]
-    (is (= true (:resolved res)))))
+    (is (= true (res "resolved")))))
 
 (deftest test-match
   (let [res (fact/match {:name "McDonalds" :latitude 34.05671 :longitude -118.42586})]
     (is (= 1 (count res)))
-    (is (contains? (first res) :factual_id))))
+    (is (contains? (first res) "factual_id"))))
 
 (deftest test-crosswalk
   (is (< 3 (count
@@ -69,16 +70,17 @@
 
 
 (deftest test-multi
-  (let [res (fact/multi {:query1 {:api fact/fetch* :args [{:table :global :q "cafe" :limit 10}]}
-                         :query2 {:api fact/facets* :args [{:table :global :select "locality,region" :q "http://www.starbucks.com"}]}
-                         :query3 {:api fact/reverse-geocode* :args [34.06021 -118.41828]}})]
-    (is (not (empty? (get-in res [:query2 :locality]))))
-    (is (= 10 (count (:query1 res))))
-    (is (.equals (get-in res [:query3 0 :address]) "1801 Avenue Of The Stars"))))
+  (let [res (fact/multi {"q1" {:api fact/fetch* :args [{:table :global :q "cafe" :limit 10}]}
+                         "q2" {:api fact/facets* :args [{:table :global :select "locality,region" :q "http://www.starbucks.com"}]}
+                         "q3" {:api fact/reverse-geocode* :args [34.06021 -118.41828]}})]
+    (is (not (empty? (get-in res ["q2" "locality"]))))
+    (is (= 10 (count (res "q1"))))
+    (is (.equals (get-in res ["q3" 0 "address"]) "1801 Avenue Of The Stars"))))
 
 ;;diff backend broken
-#_(deftest test-diff
-    (let [res (fact/diff {:table :global :start 1318890505254 :end 1318890516892})]))
+#_(deftest test-diffs
+  (let [res (fact/diffs {:table "t7RSEV" :start 1318890505254 :end 1318890516892})]
+    (prn res)))
 
 ;;submit backend broken
 #_(deftest test-submit
@@ -93,7 +95,7 @@
       ...))
 
 (defn every-locality? [res val]
-  (every? #(= % val) (map :locality res)))
+  (every? #(= % val) (map #(get % "locality") res)))
 
 (deftest test-unicode-basic
   (let [res (fact/fetch {:table :global
@@ -103,12 +105,12 @@
     (is (every-locality? res "大阪市"))))
 
 (deftest test-unicode-multi
-         (let [mres (fact/multi {:q1 {:api fact/fetch* :args [{:table :global :filters {:locality "בית שמש"}}]}
-                                 :q2 {:api fact/fetch* :args [{:table :global :filters {:locality "München"} :limit 10}]}
-                                 :q3 {:api fact/resolve* :args [{:name "César E. Chávez Library" :locality "Oakland" :region "CA" :address "3301 E 12th St"}]}})
-               res1 (:q1 mres)
-               res2 (:q2 mres)
-               res3 (:q3 mres)]
+         (let [mres (fact/multi {"q1" {:api fact/fetch* :args [{:table :global :filters {:locality "בית שמש"}}]}
+                                 "q2" {:api fact/fetch* :args [{:table :global :filters {:locality "München"} :limit 10}]}
+                                 "q3" {:api fact/resolve* :args [{:name "César E. Chávez Library" :locality "Oakland" :region "CA" :address "3301 E 12th St"}]}})
+               res1 (mres "q1")
+               res2 (mres "q2")
+               res3 (mres "q3")]
 
     (is (> (count res1) 0))
     (is (every-locality? res1 "בית שמש"))
@@ -117,4 +119,4 @@
     (is (every-locality? res2 "München"))
 
     (is (= (count res3) 1))
-    (is (= (:tel (first res3)) "(510) 535-5620"))))
+    (is (= (get-in res3 [0 "tel"]) "(510) 535-5620"))))
