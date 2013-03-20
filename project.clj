@@ -3,7 +3,7 @@
   :description "Officially supported Clojure driver for Factual's public API"
   :dependencies [
     [org.clojure/clojure "1.4.0"]
-    [org.clojure/data.json "0.1.2"]
+    [org.clojure/data.json "0.2.1"]
     [slingshot "0.10.2"]
     [oauth-clj "0.1.2"
      :exclusions [org.slf4j/slf4j-log4j12]]
