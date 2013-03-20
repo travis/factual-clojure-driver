@@ -1,3 +1,10 @@
+## 1.4.7
+  * hotfix for read-str not exist issue.
+
+## 1.4.6
+
+  * Remove unnecessary dependency on slf4j to avoid jar mismatch issues with ring
+  
 ## 1.4.3
 
   * Added integration tests for Unicode support
