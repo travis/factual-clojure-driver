@@ -99,7 +99,7 @@ Here's a demo of looking at the metadata of a response:
 ```clojure
 ;; Define function that finds restaurants near a given latitude/longitude that deliver dinner, sorted by distance:
 (defn deliver-dinner [lat lon]
-  (fact/fetch {:table :restaurants-us
+  (fact/fetch {:table :restaurants
            :filters {:meal_dinner {:$eq true}
                      :meal_deliver {:$eq true}}
            :geo {:$circle {:$center [lat lon]
@@ -130,7 +130,7 @@ See the docs on `fetch` for more details.
 ```clojure
 (fact/fetch {:table :global :limit 12})
 (fact/fetch {:table :places :q "starbucks"})
-(fact/fetch {:table :restaurants-us :filters {:locality "Los Angeles"}})
+(fact/fetch {:table :restaurants :filters {:locality "Los Angeles"}})
 (fact/fetch {:table :products-cpg :filters {:brand "The Body Shop"}})
 ```
 
@@ -145,12 +145,12 @@ The driver supports all available row filtering logic. Examples:
 
 ```clojure
 ;;; Fetch U.S. restaurants that have a blank telephone number
-(fact/fetch {:table :restaurants-us :filters {:tel {:$blank true}}})
+(fact/fetch {:table :restaurants :filters {:tel {:$blank true}}})
 ```
 
 ```clojure
 ;;; Fetch U.S. restaurants from one of five states
-(fact/fetch {:table :restaurants-us
+(fact/fetch {:table :restaurants
              :filters {:region {:$in ["MA", "VT", "NH", "RI", "CT"]}}})
 ```
 
@@ -280,7 +280,7 @@ For more details about World Geographies, including schema, see [the main API do
 The `facets` function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
 
 ```clojure
-(fact/facets {:table :restaurants-us :select "category" :geo {:$circle {:$center [34.039792 -118.423421] :$meters 1600}}})
+(fact/facets {:table :restaurants :select "category" :geo {:$circle {:$center [34.039792 -118.423421] :$meters 1600}}})
 ```
 
 The argument to facets is a hash-map of query parameters, and must include entries for `:table` and `:select`. The value for `:select` must be a comma-delimited String indicating which field(s) to facet, e.g. `"locality,region"`.
@@ -385,7 +385,7 @@ Factual's API returns more than just results rows. It also returns various metad
 You can get the schema for a specific table like this:
 
 ```clojure
-(fact/schema :restaurants-us)
+(fact/schema :restaurants)
 ```
 
 # Submit
