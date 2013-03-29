@@ -11,6 +11,5 @@
     [oauth-clj "0.1.4"]]
   :dev-dependencies ~dev-dependencies
   :profiles {:dev {:dependencies ~dev-dependencies}}
-  :aliases {"test" ["with-profile" "dev" "test" ":all"]
-            "test!" ["with-profile" "dev" "do" "clean," "deps," "test" ":all"]}
+  :aliases {"test!" ["with-profile" "dev" "do" "clean," "deps," "test" ":all"]}
   :aot :all)
