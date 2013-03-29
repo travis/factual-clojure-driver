@@ -3,9 +3,10 @@
 /lib
 /classes
 /native
-/.lein-failures
 /checkouts
-/.lein-deps-sum
 /resources/oauth.json
 /logs/**
 /target/**
+.classpath
+.project
+/.lein*
