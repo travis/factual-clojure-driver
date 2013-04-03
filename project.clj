@@ -8,7 +8,7 @@
     [org.clojure/clojure "1.4.0"]
     [cheshire "5.0.2"]
     [slingshot "0.10.3"]
-    [oauth-clj "0.1.4"]]
+    [mavericklou/oauth-clj "0.1.4.1"]]
   :dev-dependencies ~dev-dependencies
   :profiles {:dev {:dependencies ~dev-dependencies}}
   :aliases {"test!" ["with-profile" "dev" "do" "clean," "deps," "test" ":all"]}
