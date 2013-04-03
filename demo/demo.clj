@@ -1,6 +1,5 @@
 (ns factual.demo
   (:require [factual.api :as fact]
-            [clojure.data.json :as json]
             [sosueme.conf :as conf]))
 
 (defn connect

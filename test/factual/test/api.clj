@@ -3,7 +3,6 @@
             [sosueme.conf :as conf])
   (:import [factual.api factual-error])
   (:use [clojure.test]
-        [clojure.data.json :only (json-str read-json)]
         [slingshot.slingshot]))
 
 (defn connect
@@ -56,7 +55,7 @@
 (deftest test-resolve
   (let [res (first
              (fact/resolve {:name "taco"
-                           :address "10250 santa monica"}))]
+                           :address "10250 santa monica blvd"}))]
     (is (= true (res "resolved")))))
 
 (deftest test-match
@@ -66,7 +65,7 @@
 
 (deftest test-crosswalk
   (is (< 3 (count
-             (fact/fetch {:table :crosswalk :filters {:factual_id "97598010-433f-4946-8fd5-4a6dd1639d77"}})))))
+             (fact/fetch {:table :crosswalk :filters {:factual_id "56b28a26-8a6b-43f0-a504-70df38a1bd47"}})))))
 
 
 (deftest test-multi
