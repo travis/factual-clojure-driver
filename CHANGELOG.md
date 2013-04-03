@@ -1,3 +1,8 @@
+## 1.5.0
+  * removed org.clojure/data.json dependency, replaced by cheshire
+  * add lein2 support, try "lein test!"
+  * upgrade to mavericklou/oauth-clj 0.1.4.1, removed hyphenizer
+
 ## 1.4.7
   * hotfix for read-str not exist issue.
 
