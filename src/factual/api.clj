@@ -16,7 +16,7 @@
 
 ;;;
 
-(def ^:private DRIVER_VERSION_TAG "factual-clojure-driver-v1.4.4")
+(def ^:private DRIVER_VERSION_TAG "factual-clojure-driver-v1.5.0")
 
 (def ^:private ^:dynamic consumer-atom (atom nil))
 
