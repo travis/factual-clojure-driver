@@ -52,6 +52,10 @@
     (is (= 5 (count res)))
     (is (< 5 (get-in (meta res) [:response :total_row_count])))))
 
+(deftest test-fetch-row
+  (let [res (first (fact/fetch-row :places "03d401b7-e4f3-4216-b1c9-5bb08be3d786"))]
+    (is (= "03d401b7-e4f3-4216-b1c9-5bb08be3d786" (res "factual_id")))))
+
 (deftest test-resolve
   (let [res (first
              (fact/resolve {:name "taco"

@@ -16,7 +16,7 @@
 
 ;;;
 
-(def ^:private DRIVER_VERSION_TAG "factual-clojure-driver-v1.5.0")
+(def ^:private DRIVER_VERSION_TAG "factual-clojure-driver-v1.5.1")
 
 (def ^:private ^:dynamic consumer-atom (atom nil))
 
@@ -197,7 +197,7 @@
   "Returns a query for fetch requests, which can be passed into 'execute-request' or used within 'multi'."
   [m]
   {:pre [(:table m)]}
-  
+
   {:path (str "t/" (name (:table m))) :params (dissoc m :table) })
 
 (defmulti fetch
@@ -241,6 +241,20 @@
   [table q]
   (fetch (assoc q :table table)))
 
+(defn fetch-row
+  "Runs a 'Get A Row' request against Factual and returns exactly one result as
+   a hash-map in a result set if there is a row with row-id. If a row does not
+   exist with row-id, an error will be thrown.
+
+   The returned collection will be tagged with meta-data that includes
+   info about the API response.
+
+   Example usage:
+    (fetch-row :places \"03d401b7-e4f3-4216-b1c9-5bb08be3d786\")"
+  [table row-id]
+  (execute-request
+   {:path (str "t/" (name table) "/" row-id)}))
+
 ;;;
 
 (defn- facets-disp
@@ -259,7 +273,7 @@
   "Returns a query for facet requests, which can be passed into 'execute-request' or used within 'multi'."
   [q]
   {:pre [(:table q) (:select q)]}
-  
+
   {:path (str "t/" (name (:table q)) "/facets") :params (dissoc q :table)})
 
 (defmulti facets
@@ -376,7 +390,7 @@
      (diffs-query (assoc values :table table)))
   ([values]
      {:pre [(:table values) (:start values) (:end values)]}
-     
+
      {:path (str "t/" (:table values) "/diffs")
       :params (dissoc values :table)
       :raw-request {:as :stream}
@@ -409,7 +423,7 @@
   "Returns a query for multi requests, which be passed into 'execute-request'."
   [map]
   {:pre [(:api map) (:args map)]}
-  
+
   (let [f (:api map)
         req-map (apply f (:args map))
         url-params (generate-query-string  (json-params (:params req-map)))]
@@ -441,7 +455,7 @@
      (submit* nil s))
   ([id s]
      {:pre [(:table s) (:values s) (:user s)]}
-     
+
      (let [path (if id
                   (str "t/" (name (:table s)) "/" (name id) "/submit")
                   (str "t/" (name (:table s)) "/submit"))
@@ -459,7 +473,7 @@
   "Returns a query for flag requests, which can be passed into 'execute-request' or used within 'multi'."
   [id f]
   {:pre [(:table f) (:problem f) (:user f)]}
-  
+
   (let [path (str "t/" (name (:table f)) "/" (name id) "/flag")
         content (select-keys f [:problem :user :comment :reference])]
     {:path path :method :post :content content}))
