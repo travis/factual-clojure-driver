@@ -7,7 +7,7 @@ This is the Factual-supported Clojure driver for [Factual's public API](http://d
 The driver is hosted at [Clojars](https://clojars.org/factual/factual-clojure-driver). Just add this to your dependencies:
 
 ```clojure
-[factual/factual-clojure-driver "1.5.0"]
+[factual/factual-clojure-driver "1.5.1"]
 ```
 
 # Setup
@@ -113,7 +113,7 @@ You could use the above function like so:
 (deliver-dinner 34.039792 -118.423421)
 ```
 
-## Variations of `fetch<`
+## Variations of `fetch`
 
 For added convenience, the `fetch` function supports several other argument variations. For example, this will work:
 
@@ -133,6 +133,17 @@ See the docs on `fetch` for more details.
 (fact/fetch {:table :restaurants :filters {:locality "Los Angeles"}})
 (fact/fetch {:table :products-cpg :filters {:brand "The Body Shop"}})
 ```
+
+# Fetch A Row
+
+Runs a 'Get A Row' request against Factual for the specified table and row and returns exactly one result as a hash-map in a result set (if the row exists).
+Example usage:
+
+```clojure
+(fetch-row :places "03d401b7-e4f3-4216-b1c9-5bb08be3d786")
+```
+
+If the specified row does not exist, an error will be thrown.
 
 # Row Filters
 
@@ -165,73 +176,83 @@ The driver supports all available row filtering logic. Examples:
   <tr>
     <td>$eq</td>
     <td>equal to</td>
-    <td>`{:region {:$eq "CA"}}`</td>
+    <td>{:region {:$eq "CA"}}</td>
   </tr>
   <tr>
     <td>$neq</td>
     <td>not equal to</td>
-    <td>`{:region {:$neq "CA"}}`</td>
+    <td>{:region {:$neq "CA"}}</td>
   </tr>
   <tr>
     <td>$search</td>
     <td>full text search</td>
-    <td>`{:name {:$search "fried chicken"}}`</td>
+    <td>{:name {:$search "fried chicken"}}</td>
   </tr>
   <tr>
     <td>$in</td>
     <td>equals any of</td>
-    <td>`{:region {:$in ["MA", "VT", "NH", "RI", "CT"]}}`</td>
+    <td>{:region {:$in ["MA", "VT", "NH", "RI", "CT"]}}</td>
   </tr>
   <tr>
     <td>$nin</td>
     <td>does not equal any of</td>
-    <td>`{:region {:$nin ["MA", "VT", "NH", "RI", "CT"]}}`</td>
+    <td>{:region {:$nin ["MA", "VT", "NH", "RI", "CT"]}}</td>
   </tr>
   <tr>
     <td>$bw</td>
     <td>begins with</td>
-    <td>`{:name {:$bw "starbucks"}}`</td>
+    <td>{:name {:$bw "starbucks"}}</td>
   </tr>
   <tr>
     <td>$nbw</td>
     <td>does not begin with</td>
-    <td>`{:name {:$nbw "starbucks"}}`</td>
+    <td>{:name {:$nbw "starbucks"}}</td>
   </tr>
   <tr>
     <td>$bwin</td>
     <td>begins with any of</td>
-    <td>`{:name {:$bwin ["starbucks" "tea" "coffee"]}}`</td>
+    <td>{:name {:$bwin ["starbucks" "tea" "coffee"]}}</td>
   </tr>
   <tr>
     <td>$nbwin</td>
     <td>does not begin with any of</td>
-    <td>`{:name {:$nbwin ["starbucks" "tea" "coffee"]}}`</td>
+    <td>{:name {:$nbwin ["starbucks" "tea" "coffee"]}}</td>
   </tr>
   <tr>
     <td>$blank</td>
     <td>whether is blank or null</td>
-    <td>`{:name {:$blank true}}<br>
-            {:name {:$blank false}}`</td>
+    <td>{:name {:$blank true}}<br>
+        {:name {:$blank false}}</td>
   </tr>
   <tr>
     <td>$gt</td>
     <td>greater than</td>
-    <td>`{:rating {:$gt 3.0}}`</td>
+    <td>{:rating {:$gt 3.0}}</td>
   </tr>
   <tr>
     <td>$gte</td>
     <td>greater than or equal to</td>
-    <td>`{:rating {:$gte 3.0}}`</td>
+    <td>{:rating {:$gte 3.0}}</td>
   </tr>
   <tr>
     <td>$lt</td>
     <td>less than</td>
-    <td>`{:rating {:$lt 3.0}}`</td>
+    <td>{:rating {:$lt 3.0}}</td>
   </tr>
   <tr>
     <td>$lte</td>
     <td>less than or equal to</td>
-    <td>`{:rating {:$lte 3.0}}`</td>
+    <td>{:rating {:$lte 3.0}}</td>
+  </tr>
+  <tr>
+    <td>$includes</td>
+    <td>array includes</td>
+    <td>{:category_ids {:$includes 308}}</td>
+  </tr>
+  <tr>
+    <td>$includes_any</td>
+    <td>array includes any of</td>
+    <td>{:category_ids {:$includes_any [312 338]}}</td>
   </tr>
 </table>
 

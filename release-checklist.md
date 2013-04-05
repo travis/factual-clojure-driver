@@ -4,3 +4,4 @@
   * Update README feature docs
   * Update project.clj version tag
   * Update Changelog
+  * Push to Clojars

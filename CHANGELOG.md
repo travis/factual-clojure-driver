@@ -1,3 +1,8 @@
+## 1.5.1
+  * Added support for Get A Row (fetch-row)
+  * Added docs for row filtering with $includes and $includes_any
+  * Misc. cleanup of README
+
 ## 1.5.0
   * removed org.clojure/data.json dependency, replaced by cheshire
   * add lein2 support, try "lein test!"
@@ -9,7 +14,7 @@
 ## 1.4.6
 
   * Remove unnecessary dependency on slf4j to avoid jar mismatch issues with ring
-  
+
 ## 1.4.3
 
   * Added integration tests for Unicode support

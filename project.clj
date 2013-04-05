@@ -1,7 +1,7 @@
 (def dev-dependencies
   '[[factual/sosueme "0.0.15"]])
 
-(defproject factual/factual-clojure-driver "1.5.0"
+(defproject factual/factual-clojure-driver "1.5.1"
   :url "http://github.com/Factual/factual-clojure-driver"
   :description "Officially supported Clojure driver for Factual's public API"
   :dependencies [
