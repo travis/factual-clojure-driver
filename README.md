@@ -475,7 +475,7 @@ You can run a Geopulse query using the `geopulse` function. You pass it a hash-m
 ```
 
 ```clojure
-(fact/geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,race,age_by_gender"})
+(fact/geopulse {:geo {:$point [34.06021,-118.41828]} :select "income,housing"})
 ```
 
 Available pulses include commercial_density, commercial_profile, income, race, hispanic, and age_by_gender.
