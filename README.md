@@ -121,7 +121,7 @@ For added convenience, the `fetch` function supports several other argument vari
 (fact/fetch :places {:limit 3})
 ```
 
-See the docs on `fetch` for more details.
+See the [docs on `fetch`](https://github.com/Factual/factual-clojure-driver/wiki/Fetch) for more details.
 
 ## Using Fetch with any Factual dataset
 
@@ -140,7 +140,7 @@ Runs a 'Get A Row' request against Factual for the specified table and row and r
 Example usage:
 
 ```clojure
-(fetch-row :places "03d401b7-e4f3-4216-b1c9-5bb08be3d786")
+(fact/fetch-row :places "03d401b7-e4f3-4216-b1c9-5bb08be3d786")
 ```
 
 If the specified row does not exist, an error will be thrown.
@@ -313,7 +313,7 @@ Not all fields are configured to return facet counts.  To determine what fields 
 For added convenience, the `facets` function supports several other argument variations. For example, this will work:
 
 ```clojure
-(facets :us-restaurants "locality")
+(fact/facets :us-restaurants "locality")
 ```
 
 See the docs on `facets` for more details.
@@ -333,30 +333,38 @@ Examples:
 
 ```clojure
 ;; Lookup the Yelp Crosswalk entry for The Stand, using on its Yelp page
-(fact/fetch {:table :crosswalk :filters {:url "http://www.yelp.com/biz/the-stand-los-angeles-5"}})
+(fact/fetch {:table :crosswalk
+             :filters {:url "http://www.yelp.com/biz/the-stand-los-angeles-5"}})
 ```
 
 ```clojure
 ;; Lookup The Stand's Crosswalk entry using its Foursquare ID
-(fact/fetch {:table :crosswalk :filters {:namespace :foursquare :namespace_id "4a651cb1f964a52052c71fe3"}})
+(fact/fetch {:table :crosswalk
+             :filters {:namespace :foursquare
+                       :namespace_id "4a651cb1f964a52052c71fe3"}})
 ```
 
 ```clojure
 ;; Find all Crosswalk entries that Factual has for The Stand
-(fact/fetch {:table :crosswalk :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881"}})
+(fact/fetch {:table :crosswalk
+             :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881"}})
 ```
 
 ```clojure
 ;; Find the OpenMenu Crosswalk entry for The Stand, by Factual ID
-(fact/fetch {:table :crosswalk :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881" :namespace :openmenu}})
+(fact/fetch {:table :crosswalk
+             :filters {:factual_id "39599c9b-8943-4c15-999d-c03f6c587881"
+                       :namespace :openmenu}})
 ```
 
 ```clojure
 ;; Search for all Yelp Crosswalk entries for The Container Store
-(fact/fetch {:table :crosswalk :q "the container store" :filters {:namespace :yelp}})
+(fact/fetch {:table :crosswalk
+             :q "the container store"
+             :filters {:namespace :yelp}})
 ```
 
-More details on Crosswalk can be found in (our general API documentation for Crosswalk)[http://developer.factual.com/display/docs/Places+API+-+Crosswalk].
+More details on Crosswalk can be found in [our general API documentation for Crosswalk](http://developer.factual.com/display/docs/Places+API+-+Crosswalk).
 
 # Resolve
 
@@ -379,7 +387,10 @@ Examples:
 
 ```clojure
 ; Find the entity named "McDonald's" with an address combination
-(fact/match {:name "McDonalds" :address "10451 Santa Monica Blvd" :region "CA" :postcode "90025"})
+(fact/match {:name "McDonalds"
+             :address "10451 Santa Monica Blvd"
+             :region "CA"
+             :postcode "90025"})
 ```
 
 ```clojure
@@ -392,7 +403,9 @@ Examples:
 Factual's API returns more than just results rows. It also returns various metadata about the results. You can access this metadata by using Clojure's `meta` function on your results. Examples:
 
 ```clojure
-> (meta (fact/fetch {:table :places :filters {:name {:$bw "Starbucks"}} :include_count true}))
+> (meta (fact/fetch {:table :places
+                     :filters {:name {:$bw "Starbucks"}}
+                     :include_count true}))
 {:total_row_count 8751, :included_rows 20, :version 3, :status "ok"}
 ```
 
