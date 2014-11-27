@@ -301,7 +301,10 @@ For more details about World Geographies, including schema, see [the main API do
 The `facets` function gives you row counts for Factual tables, grouped by facets of the data. For example, you may want to query all businesses within 1 mile of a location and for a count of those businesses by category:
 
 ```clojure
-(fact/facets {:table :restaurants :select "category" :geo {:$circle {:$center [34.039792 -118.423421] :$meters 1600}}})
+(fact/facets {:table :restaurants
+              :select "category"
+              :geo {:$circle {:$center [34.039792 -118.423421]
+                              :$meters 1600}}})
 ```
 
 The argument to facets is a hash-map of query parameters, and must include entries for `:table` and `:select`. The value for `:select` must be a comma-delimited String indicating which field(s) to facet, e.g. `"locality,region"`.
