@@ -1,3 +1,7 @@
+## 1.5.2
+  * Upgrade to use clojure 1.6.0
+
+
 ## 1.5.1
   * Added support for Get A Row (fetch-row)
   * Added docs for row filtering with $includes and $includes_any
